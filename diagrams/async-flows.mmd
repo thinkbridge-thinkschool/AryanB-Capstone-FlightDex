@@ -1,0 +1,17 @@
+%% Section 3 — Async Flows: event-driven FlightView refresh and the sync read path
+sequenceDiagram
+    participant LOC as Locations
+    participant BUS as Event Bus
+    participant TT as Timetable Projector
+    participant DB as FlightView Store
+    participant API as /flight/:id
+    participant UI as Dashboard
+
+    LOC->>BUS: LocationChanged(code)
+    BUS->>TT: dispatch
+    TT->>TT: find FlightViews using code
+    TT->>DB: upsert refreshed FlightViews
+    UI->>API: GET /flight/:id
+    API->>DB: read FlightView
+    DB-->>API: detail row
+    API-->>UI: FlightDetailsDto

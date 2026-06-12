@@ -1,0 +1,37 @@
+%% Section 2 — Aggregates: Flight aggregate composition and cross-context references
+classDiagram
+    class Flight {
+        +FlightId Id
+        +string Airline
+        +RouteId RouteId
+        +FlightSchedule Schedule
+    }
+    class FlightDetails {
+        +string AirplaneModel
+        +SeatingPlan Seats
+        +Duration AverageDuration
+    }
+    class FlightSchedule {
+        +DateTime Departure
+        +DateTime Arrival
+    }
+    class SeatingPlan {
+        +int Economy
+        +int Business
+        +int First
+    }
+    class Route {
+        +RouteId Id
+        +AirportCode From
+        +AirportCode To
+    }
+    class Location {
+        +AirportCode Code
+        +string AirportName
+        +Address Address
+    }
+    Flight "1" *-- "1" FlightDetails
+    Flight "1" *-- "1" FlightSchedule
+    FlightDetails "1" *-- "1" SeatingPlan
+    Flight ..> Route : RouteId
+    Route ..> Location : AirportCode

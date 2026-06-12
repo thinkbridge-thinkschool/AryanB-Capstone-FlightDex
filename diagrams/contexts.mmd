@@ -1,0 +1,9 @@
+%% Section 1 — Contexts: dashboard -> host -> Timetable, with read-side ports and event bus
+flowchart LR
+    Dashboard([Dashboard Client]) -->|/flight, /flight/:id| API[FlightDex.Api Host]
+    API --> TT[Timetable Context\n core]
+    TT -.IRouteLookup.-> RT[Routing Context]
+    TT -.ILocationLookup.-> LOC[Locations Context]
+    RT -.RouteChanged.-> BUS{{In-Process Event Bus}}
+    LOC -.LocationChanged.-> BUS
+    BUS -.-> TT
