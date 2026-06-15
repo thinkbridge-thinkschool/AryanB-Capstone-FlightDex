@@ -1,1 +1,6 @@
 <!-- Timetable domain project: Flight aggregate, value objects, ports -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\FlightDex.SharedKernel\FlightDex.SharedKernel.csproj" />
+  </ItemGroup>
+</Project>

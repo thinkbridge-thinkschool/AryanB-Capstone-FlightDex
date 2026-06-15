@@ -1,1 +1,7 @@
 <!-- Timetable application project: queries, contracts, enrichment, event handlers -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\FlightDex.Timetable.Domain\FlightDex.Timetable.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\FlightDex.IntegrationEvents\FlightDex.IntegrationEvents.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,1 +1,3 @@
 <!-- Shared kernel project: domain primitives referenced by all contexts -->
+<Project Sdk="Microsoft.NET.Sdk">
+</Project>

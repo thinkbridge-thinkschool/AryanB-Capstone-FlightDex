@@ -1,1 +1,3 @@
 <!-- Integration events project: public event contracts shared across contexts -->
+<Project Sdk="Microsoft.NET.Sdk">
+</Project>

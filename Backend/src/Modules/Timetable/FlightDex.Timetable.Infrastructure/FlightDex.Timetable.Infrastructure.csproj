@@ -1,1 +1,15 @@
 <!-- Timetable infrastructure project: EF Core persistence, lookup adapters, DI -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FlightDex.Timetable.Application\FlightDex.Timetable.Application.csproj" />
+    <!-- Cross-context reads happen through the supporting contexts' application APIs. -->
+    <ProjectReference Include="..\..\Routing\FlightDex.Routing.Application\FlightDex.Routing.Application.csproj" />
+    <ProjectReference Include="..\..\Locations\FlightDex.Locations.Application\FlightDex.Locations.Application.csproj" />
+  </ItemGroup>
+</Project>

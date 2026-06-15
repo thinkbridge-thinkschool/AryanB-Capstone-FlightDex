@@ -1,1 +1,6 @@
 <!-- Locations domain project: Location aggregate and value objects -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\FlightDex.SharedKernel\FlightDex.SharedKernel.csproj" />
+  </ItemGroup>
+</Project>

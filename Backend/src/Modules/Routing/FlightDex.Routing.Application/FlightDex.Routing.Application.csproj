@@ -1,1 +1,6 @@
 <!-- Routing application project: route lookup queries and contracts -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\FlightDex.Routing.Domain\FlightDex.Routing.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,1 +1,6 @@
 <!-- Locations application project: location lookup queries and contracts -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\FlightDex.Locations.Domain\FlightDex.Locations.Domain.csproj" />
+  </ItemGroup>
+</Project>

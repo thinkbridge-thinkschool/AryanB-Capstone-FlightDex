@@ -1,1 +1,16 @@
 <!-- Test project for the Timetable context (domain, handlers, projector) -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Timetable\FlightDex.Timetable.Application\FlightDex.Timetable.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Timetable\FlightDex.Timetable.Domain\FlightDex.Timetable.Domain.csproj" />
+  </ItemGroup>
+</Project>
