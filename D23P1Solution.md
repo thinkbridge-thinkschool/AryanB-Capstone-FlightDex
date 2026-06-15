@@ -18,7 +18,7 @@ Infrastructure/
 
 ---
 
-## main.bicep
+## 1. main.bicep
 
 ```bicep
 targetScope = 'resourceGroup'
@@ -107,7 +107,7 @@ output serviceBusEndpoint string = bus.outputs.endpoint
 
 ---
 
-## Module: appService.bicep
+## 2. Module: appService.bicep
 
 ```bicep
 @description('Web app name — must be globally unique.')
@@ -198,7 +198,9 @@ output webAppId        string = webApp.id
 
 ---
 
-## parameters/dev.bicepparam
+## 3. dev/prod params
+
+### 3.1 parameters/dev.bicepparam
 
 ```bicep
 using '../main.bicep'
@@ -224,7 +226,7 @@ param serviceBusSkuName = 'Basic'
 
 ---
 
-## parameters/prod.bicepparam
+### 3.2 parameters/prod.bicepparam
 
 ```bicep
 using '../main.bicep'
@@ -279,7 +281,7 @@ az deployment group create `
 
 ---
 
-## what-if output (dev)
+## 4. what-if output (dev)
 
 ```
 PS C:\Users\aryan\repos\AryanB-Capstone-FlightDex> $env:FLIGHTDEX_SQL_PASSWORD = "<password>"
