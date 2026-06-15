@@ -6,9 +6,11 @@ public abstract class ValueObject : IEquatable<ValueObject>
     /// <summary>Components that participate in equality, in order.</summary>
     protected abstract IEnumerable<object?> GetEqualityComponents();
 
-    public bool Equals(ValueObject? other) => throw new NotImplementedException();
+    public bool Equals(ValueObject? other)
+        => other is not null && GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
 
-    public override bool Equals(object? obj) => throw new NotImplementedException();
+    public override bool Equals(object? obj) => obj is ValueObject vo && Equals(vo);
 
-    public override int GetHashCode() => throw new NotImplementedException();
+    public override int GetHashCode()
+        => GetEqualityComponents().Select(x => x?.GetHashCode() ?? 0).Aggregate((a, b) => a ^ b);
 }

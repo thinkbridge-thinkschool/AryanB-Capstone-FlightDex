@@ -3,13 +3,17 @@ using FlightDex.Timetable.Application.Enrichment;
 
 namespace FlightDex.Timetable.Infrastructure.Lookups;
 
-/// <summary><see cref="ILocationLookup"/> implementation calling the Locations context's query API.</summary>
 public sealed class LocationLookupAdapter : ILocationLookup
 {
     private readonly GetLocationByCodeHandler _getLocationByCode;
 
-    public LocationLookupAdapter(GetLocationByCodeHandler getLocationByCode) => _getLocationByCode = getLocationByCode;
+    public LocationLookupAdapter(GetLocationByCodeHandler getLocationByCode)
+        => _getLocationByCode = getLocationByCode;
 
-    public Task<LocationLookupResult?> GetLocationAsync(string airportCode, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
+    public async Task<LocationLookupResult?> GetLocationAsync(string airportCode, CancellationToken cancellationToken = default)
+    {
+        var dto = await _getLocationByCode.HandleAsync(new GetLocationByCodeQuery(airportCode), cancellationToken);
+        if (dto is null) return null;
+        return new LocationLookupResult(dto.AirportCode, dto.City, dto.State, dto.Country);
+    }
 }

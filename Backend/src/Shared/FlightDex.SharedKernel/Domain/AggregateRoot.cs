@@ -12,7 +12,7 @@ public abstract class AggregateRoot<TId> : Entity<TId>
 
     protected AggregateRoot() { }
 
-    protected void Raise(IDomainEvent domainEvent) => throw new NotImplementedException();
+    protected void Raise(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
 
-    public void ClearDomainEvents() => throw new NotImplementedException();
+    public void ClearDomainEvents() => _domainEvents.Clear();
 }

@@ -11,9 +11,9 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     // Parameterless ctor reserved for the ORM materializer.
     protected Entity() { }
 
-    public bool Equals(Entity<TId>? other) => throw new NotImplementedException();
+    public bool Equals(Entity<TId>? other) => other is not null && Id.Equals(other.Id);
 
-    public override bool Equals(object? obj) => throw new NotImplementedException();
+    public override bool Equals(object? obj) => obj is Entity<TId> e && Equals(e);
 
-    public override int GetHashCode() => throw new NotImplementedException();
+    public override int GetHashCode() => Id.GetHashCode();
 }

@@ -1,8 +1,8 @@
 using FlightDex.Timetable.Domain.Flight;
+using Microsoft.EntityFrameworkCore;
 
 namespace FlightDex.Timetable.Infrastructure.Persistence;
 
-/// <summary><see cref="IFlightRepository"/> implementation backed by EF Core.</summary>
 public sealed class FlightRepository : IFlightRepository
 {
     private readonly TimetableDbContext _dbContext;
@@ -10,10 +10,15 @@ public sealed class FlightRepository : IFlightRepository
     public FlightRepository(TimetableDbContext dbContext) => _dbContext = dbContext;
 
     public Task<Flight?> GetByIdAsync(FlightId id, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
+    {
+        var val = id.Value;
+        return _dbContext.Flights
+            .FirstOrDefaultAsync(f => f.Id == FlightId.From(val), cancellationToken);
+    }
 
-    public Task AddAsync(Flight flight, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
+    public async Task AddAsync(Flight flight, CancellationToken cancellationToken = default)
+        => await _dbContext.Flights.AddAsync(flight, cancellationToken);
 
-    public void Update(Flight flight) => throw new NotImplementedException();
+    public void Update(Flight flight)
+        => _dbContext.Flights.Update(flight);
 }

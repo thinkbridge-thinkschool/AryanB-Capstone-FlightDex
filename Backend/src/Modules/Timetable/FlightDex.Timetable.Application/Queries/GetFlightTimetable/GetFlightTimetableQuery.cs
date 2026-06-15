@@ -17,5 +17,6 @@ public enum FlightSortBy
 {
     Departure,
     Arrival,
-    Airline
+    Airline,
+    Location
 }

@@ -3,7 +3,6 @@ using FlightDex.Timetable.Domain.ReadModels;
 
 namespace FlightDex.Timetable.Application.Enrichment;
 
-/// <summary>Builds/refreshes a <see cref="FlightView"/> from flight + route + location data.</summary>
 public sealed class FlightViewProjector
 {
     private readonly IRouteLookup _routeLookup;
@@ -15,7 +14,32 @@ public sealed class FlightViewProjector
         _locationLookup = locationLookup;
     }
 
-    /// <summary>Projects a single flight into a denormalized read-model row.</summary>
-    public Task<FlightView> ProjectAsync(Flight flight, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
+    public async Task<FlightView?> ProjectAsync(Flight flight, string airlineName, CancellationToken cancellationToken = default)
+    {
+        var route = await _routeLookup.GetRouteAsync(flight.RouteId, cancellationToken);
+        if (route is null) return null;
+
+        var from = await _locationLookup.GetLocationAsync(route.FromAirportCode, cancellationToken);
+        var to = await _locationLookup.GetLocationAsync(route.ToAirportCode, cancellationToken);
+        if (from is null || to is null) return null;
+
+        return new FlightView
+        {
+            FlightId = flight.Id.Value,
+            AirlineId = flight.AirlineId,
+            Airline = airlineName,
+            RouteId = flight.RouteId,
+            FromAirportCode = from.AirportCode,
+            FromCity = from.City,
+            FromState = from.State,
+            FromCountry = from.Country,
+            ToAirportCode = to.AirportCode,
+            ToCity = to.City,
+            ToState = to.State,
+            ToCountry = to.Country,
+            DepartureUtc = flight.Schedule.DepartureUtc,
+            ArrivalUtc = flight.Schedule.ArrivalUtc,
+            Status = flight.Status
+        };
+    }
 }

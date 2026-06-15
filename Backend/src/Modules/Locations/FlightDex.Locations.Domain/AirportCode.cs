@@ -9,9 +9,9 @@ public sealed class AirportCode : ValueObject
 
     private AirportCode(string value) => Value = value;
 
-    public static AirportCode Create(string value) => throw new NotImplementedException();
+    public static AirportCode Create(string value) => new(value.ToUpperInvariant());
 
-    protected override IEnumerable<object?> GetEqualityComponents() => throw new NotImplementedException();
+    protected override IEnumerable<object?> GetEqualityComponents() { yield return Value; }
 
     public override string ToString() => Value;
 }

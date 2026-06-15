@@ -16,7 +16,12 @@ public sealed class Address : ValueObject
         Country = country;
     }
 
-    public static Address Create(string city, string state, string country) => throw new NotImplementedException();
+    public static Address Create(string city, string state, string country) => new(city, state, country);
 
-    protected override IEnumerable<object?> GetEqualityComponents() => throw new NotImplementedException();
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return City;
+        yield return State;
+        yield return Country;
+    }
 }

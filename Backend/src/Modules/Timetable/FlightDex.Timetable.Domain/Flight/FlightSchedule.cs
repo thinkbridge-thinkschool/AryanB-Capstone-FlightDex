@@ -2,13 +2,12 @@ using FlightDex.SharedKernel.Domain;
 
 namespace FlightDex.Timetable.Domain.Flight;
 
-/// <summary>Value object: departure/arrival timestamps; derives flight duration.</summary>
 public sealed class FlightSchedule : ValueObject
 {
     public DateTime DepartureUtc { get; }
     public DateTime ArrivalUtc { get; }
 
-    public TimeSpan Duration => throw new NotImplementedException();
+    public TimeSpan Duration => ArrivalUtc - DepartureUtc;
 
     private FlightSchedule(DateTime departureUtc, DateTime arrivalUtc)
     {
@@ -16,7 +15,16 @@ public sealed class FlightSchedule : ValueObject
         ArrivalUtc = arrivalUtc;
     }
 
-    public static FlightSchedule Create(DateTime departureUtc, DateTime arrivalUtc) => throw new NotImplementedException();
+    public static FlightSchedule Create(DateTime departureUtc, DateTime arrivalUtc)
+    {
+        if (arrivalUtc <= departureUtc)
+            throw new ArgumentException("Arrival must be after departure.");
+        return new(departureUtc, arrivalUtc);
+    }
 
-    protected override IEnumerable<object?> GetEqualityComponents() => throw new NotImplementedException();
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return DepartureUtc;
+        yield return ArrivalUtc;
+    }
 }

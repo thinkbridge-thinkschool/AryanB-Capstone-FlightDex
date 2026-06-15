@@ -1,8 +1,18 @@
+using FlightDex.Locations.Infrastructure;
+using FlightDex.Routing.Infrastructure;
+using FlightDex.Timetable.Infrastructure;
+
 namespace FlightDex.Api.Modules;
 
-/// <summary>Registers each bounded context's services and the in-process event bus.</summary>
 public static class ModuleRegistration
 {
     public static IServiceCollection AddModules(this IServiceCollection services, IConfiguration configuration)
-        => throw new NotImplementedException();
+    {
+        services
+            .AddLocationsModule(configuration)
+            .AddRoutingModule(configuration)
+            .AddTimetableModule(configuration);
+
+        return services;
+    }
 }
