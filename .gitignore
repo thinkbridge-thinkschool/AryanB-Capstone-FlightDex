@@ -1,2 +1,5 @@
 obj
 bin
+
+# azd environments — local state + secrets (never commit)
+.azure/

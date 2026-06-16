@@ -1,0 +1,15 @@
+# azd project manifest — drives provisioning of the FlightDex stack.
+# Provisioning uses Azure Deployment Stacks (azd alpha: deployment.stacks),
+# so the whole stack is one managed unit: clean teardown + drift detection.
+name: flightdex
+metadata:
+  template: flightdex@1.0.0
+
+# main.bicep is resourceGroup-scoped. azd targets the RG named by the
+# AZURE_RESOURCE_GROUP env var, defaulting to "rg-<env>" (rg-dev, rg-prod),
+# and creates it if it doesn't already exist.
+
+infra:
+  provider: bicep
+  path: Infrastructure
+  module: main
