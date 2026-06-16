@@ -213,28 +213,29 @@ Service Bus SKU      : Standard
 ```
 ---
 
-## 4. What Deployment Stacks give over plain deployments
-
-With Deployment Stacks, tearing the entire environment down in one command can be done, while a plain deployment could have required hunting down and deleting every resource by hand. A deploymet stacks also detects drift from any out-of-band change, while a plain deployment could have required spotting that change yourself long after it slipped in.
 
 ---
 
-## 4. Screenshots
+## 3. Output Screenshots
 
-### 4.1 az down
+### 3.1 az down
 ![](azd_down.png)
 
-### 4.2 az provision dev and prod
+### 3.2 az provision dev and prod
 ![](azd_provision_dev_and_prod.png)
 
-### 4.3 azd env
+### 3.3 azd env
 ![](azd_env.png)
 
-### 4.4 az resource groups
+### 3.4 az resource groups
 ![](az_resourceGroups.png)
 
-### 4.5 Resource Group Dev
+### 3.5 Resource Group Dev
 ![](AzurePortal_rg_dev.png)
 
-### 4.6 Resource Group Prod
+### 3.6 Resource Group Prod
 ![](AzurePortal_rg_prod.png)
+
+## 4. What Deployment Stacks give over plain deployments
+
+With Deployment Stacks, tearing the entire environment down in one command can be done, while a plain deployment could have required hunting down and deleting every resource by hand. A deploymet stacks also detects drift from any out-of-band change, while a plain deployment could have required spotting that change yourself long after it slipped in.
