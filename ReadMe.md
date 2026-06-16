@@ -1,0 +1,1 @@
+# Solution at [Day24P1_Solution.md](Day24P1_Solution.md)

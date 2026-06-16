@@ -9,7 +9,7 @@ Deployment Stacks are an alpha feature in azd — enabled once per machine:
 
 ### 1.1 Turning Deployment stacks on
 
-```powershell
+```pwsh
 azd config set alpha.deployment.stacks on
 ```
 
@@ -59,7 +59,7 @@ dev rides the defaults; prod overrides the four SKU vars via `azd env set`.
 ### 1.4 azd env
 Per-environment values (secrets live in `.azure/<env>/.env`, git-ignored):
 
-```powershell
+```pwsh
 # dev — rides the B1 / Basic / Basic defaults
 azd env new dev  --subscription <sub-id> --location eastasia
 azd env set SQL_ADMIN_PASSWORD "<password>" -e dev
@@ -79,10 +79,10 @@ azd env set SERVICE_BUS_SKU "Standard" -e prod
 First did a teardown and deployed using azd provision to dev and prod. This was done to test the convinience of instant deployment, re-deployment and teardown.
 
 ### 2.1 Teardown
-```
+```pwsh
 azd down
 ```
-```
+```pwsh
 Deleting all resources and deployed code on Azure (azd down)
 Local application code is not deleted when running 'azd down'.
 
@@ -113,10 +113,10 @@ SUCCESS: Your application was removed from Azure in 6 minutes 56 seconds.
 Dev was already live from the initial deploy, so this re-run shows the stack comparing
 state, finding no drift, and applying nothing — the idempotency a stack-backed provision gives:
 
-```
+```pwsh
 PS> azd provision -e dev
 ```
-```
+```pwsh
 Provisioning Azure resources (azd provision)
 Provisioning Azure resources can take some time.
 
@@ -132,10 +132,10 @@ SUCCESS: There are no changes to provision for your application.
 ```
 
 #### azd env values
-```
+```pwsh
 azd env get-values -e dev
 ```
-```
+```pwsh
 apiUrl             = https://flightdex-api-dev-bmx2yg.azurewebsites.net
 sqlServerFqdn      = flightdex-sql-dev-bmx2yg.database.windows.net
 serviceBusEndpoint = https://flightdex-bus-dev-bmx2yg.servicebus.windows.net:443/
@@ -146,10 +146,10 @@ serviceBusEndpoint = https://flightdex-bus-dev-bmx2yg.servicebus.windows.net:443
 Same `main.bicep` and `main.parameters.json`. Only the four SKU env vars differ.
 
 #### azd provision
-```
+```pwsh
 azd provision -e prod
 ```
-```
+```pwsh
 Provisioning Azure resources (azd provision)
 Provisioning Azure resources can take some time.
 
@@ -173,10 +173,10 @@ https://portal.azure.com/#@/resource/subscriptions/.../resourceGroups/rg-prod/ov
 ```
 
 #### azd env values 
-```
+```pwsh
 azd env get-values -e prod
 ```
-```
+```pwsh
 apiUrl             = https://flightdex-api-prod-nt776k.azurewebsites.net
 sqlServerFqdn      = flightdex-sql-prod-nt776k.database.windows.net
 serviceBusEndpoint = https://flightdex-bus-prod-nt776k.servicebus.windows.net:443/
@@ -186,34 +186,31 @@ serviceBusEndpoint = https://flightdex-bus-prod-nt776k.servicebus.windows.net:44
 Reading the SKUs back off the live prod resources proves the S2 / Standard overrides took effect (run against `rg-prod`):
 
 #### App Service Plan
-```
+```pwsh
 $rg = 'rg-prod'
 $plan = az appservice plan list -g $rg -o json | ConvertFrom-Json
 "App Service Plan SKU : $($plan.sku.name) ($($plan.sku.tier))"
 ```
-```
+```pwsh
 App Service Plan SKU : S2 (Standard)
 ```
 #### SQL Database SKU
-```
+```pwsh
 $srv = (az sql server list -g $rg -o json | ConvertFrom-Json)[0].name
 $db  = az sql db list -g $rg --server $srv -o json | ConvertFrom-Json | Where-Object { $_.name -eq 'FlightDex' }
 "SQL Database SKU     : $($db.currentServiceObjectiveName) ($($db.sku.tier))"
 ```
-```
+```pwsh
 SQL Database SKU     : S2 (Standard)
 ```
 #### Service Bus SKU
-```
+```pwsh
 $sb = az servicebus namespace list -g $rg -o json | ConvertFrom-Json
 "Service Bus SKU      : $($sb.sku.name)"
 ```
-```
+```pwsh
 Service Bus SKU      : Standard
 ```
----
-
-
 ---
 
 ## 3. Output Screenshots
