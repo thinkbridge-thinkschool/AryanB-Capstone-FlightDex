@@ -114,7 +114,7 @@ Dev was already live from the initial deploy, so this re-run shows the stack com
 state, finding no drift, and applying nothing — the idempotency a stack-backed provision gives:
 
 ```pwsh
-PS> azd provision -e dev
+azd provision -e dev
 ```
 ```pwsh
 Provisioning Azure resources (azd provision)
