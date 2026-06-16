@@ -1,4 +1,4 @@
-# FlightDex — Deployment via Deployment Stacks + azd (Day 24 Part 1)
+# Day 24 Part 1 - Deployment via Deployment Stacks + azd Day 24 Part 1
 
 Deployed using Deployment stack through azd. Ran a clean teardown and re deployment.
 ---
