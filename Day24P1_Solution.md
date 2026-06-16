@@ -1,6 +1,6 @@
 # FlightDex — Deployment via Deployment Stacks + azd (Day 24 Part 1)
 
-Deployed using Deployment stack through azd. Ran a clean teardown and re deployment to test 
+Deployed using Deployment stack through azd. Ran a clean teardown and re deployment.
 ---
 
 ## 1. azd config
@@ -76,8 +76,39 @@ azd env set SERVICE_BUS_SKU "Standard" -e prod
 ---
 
 ## 2. Deploy output
+First did a teardown and deployed using azd provision to dev and prod. This was done to test the convinience of instant deployment, re-deployment and teardown.
 
-### 2.1 dev
+### 2.1 Teardown
+```
+azd down
+```
+```
+Deleting all resources and deployed code on Azure (azd down)
+Local application code is not deleted when running 'azd down'.
+
+
+WARNING: Feature 'deployment.stacks' is in alpha stage.
+To learn more about alpha features and their support, visit https://aka.ms/azd-feature-stages.
+
+  Resource(s) to be deleted:
+
+  Resource Group: rg-prod
+    • Service Bus Namespace: flightdex-bus-prod-nt776k
+    • Azure SQL Server: flightdex-sql-prod-nt776k
+    • App Service plan: flightdex-plan-prod-nt776k
+    • App Service: flightdex-api-prod-nt776k
+
+
+? Total resources to delete: 8, are you sure you want to continue? Yes
+Deleting your resources can take some time.
+
+  (✓) Done: Deleted resource group deployment stack azd-stack-prod
+
+
+SUCCESS: Your application was removed from Azure in 6 minutes 56 seconds.
+```
+
+### 2.2 dev
 
 Dev was already live from the initial deploy, so this re-run shows the stack comparing
 state, finding no drift, and applying nothing — the idempotency a stack-backed provision gives:
@@ -110,7 +141,7 @@ sqlServerFqdn      = flightdex-sql-dev-bmx2yg.database.windows.net
 serviceBusEndpoint = https://flightdex-bus-dev-bmx2yg.servicebus.windows.net:443/
 ```
 
-### 2.2 prod
+### 2.3 prod
 
 Same `main.bicep` and `main.parameters.json`. Only the four SKU env vars differ.
 
@@ -151,7 +182,7 @@ sqlServerFqdn      = flightdex-sql-prod-nt776k.database.windows.net
 serviceBusEndpoint = https://flightdex-bus-prod-nt776k.servicebus.windows.net:443/
 ```
 
-### 2.3 Comfirming Promotion
+### 2.4 Comfirming Promotion
 Reading the SKUs back off the live prod resources proves the S2 / Standard overrides took effect (run against `rg-prod`):
 
 #### App Service Plan
@@ -180,36 +211,6 @@ $sb = az servicebus namespace list -g $rg -o json | ConvertFrom-Json
 ```
 Service Bus SKU      : Standard
 ```
-
-### 2.4 Teardown
-```
-azd down
-```
-```
-Deleting all resources and deployed code on Azure (azd down)
-Local application code is not deleted when running 'azd down'.
-
-
-WARNING: Feature 'deployment.stacks' is in alpha stage.
-To learn more about alpha features and their support, visit https://aka.ms/azd-feature-stages.
-
-  Resource(s) to be deleted:
-
-  Resource Group: rg-prod
-    • Service Bus Namespace: flightdex-bus-prod-nt776k
-    • Azure SQL Server: flightdex-sql-prod-nt776k
-    • App Service plan: flightdex-plan-prod-nt776k
-    • App Service: flightdex-api-prod-nt776k
-
-
-? Total resources to delete: 8, are you sure you want to continue? Yes
-Deleting your resources can take some time.
-
-  (✓) Done: Deleted resource group deployment stack azd-stack-prod
-
-
-SUCCESS: Your application was removed from Azure in 6 minutes 56 seconds.
-```
 ---
 
 ## 4. What Deployment Stacks give over plain deployments
@@ -219,15 +220,21 @@ With Deployment Stacks, tearing the entire environment down in one command can b
 ---
 
 ## 4. Screenshots
+
 ### 4.1 az down
 ![](azd_down.png)
+
 ### 4.2 az provision dev and prod
 ![](azd_provision_dev_and_prod.png)
+
 ### 4.3 azd env
 ![](azd_env.png)
+
 ### 4.4 az resource groups
 ![](az_resourceGroups.png)
+
 ### 4.5 Resource Group Dev
 ![](AzurePortal_rg_dev.png)
+
 ### 4.6 Resource Group Prod
 ![](AzurePortal_rg_prod.png)
