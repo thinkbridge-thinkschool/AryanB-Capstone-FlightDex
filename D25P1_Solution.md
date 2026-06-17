@@ -234,7 +234,7 @@ az webapp config appsettings list -g $rg -n $app `
 
 ```text
 Name                                  Value
-------------------------------------  ----------------------------------------------------------
+--------------------------------------------
 ASPNETCORE_ENVIRONMENT                Production
 ServiceBus__FullyQualifiedNamespace   flightdex-bus-dev-bmx2yg.servicebus.windows.net
 ExternalFlightFeed__ApiKey            @Microsoft.KeyVault(SecretUri=https://flightdex-kv-dev-bmx2yg.vault.azure.net/secrets/ExternalFlightFeed-ApiKey)
