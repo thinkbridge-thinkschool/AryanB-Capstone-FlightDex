@@ -1,8 +1,6 @@
 # Day 25 Part 1 — Identity End-to-End
 
-The API now reaches SQL and Service Bus with its **managed identity**, the one secret it
-can't replace with a token sits behind a **Key Vault reference**, and the front door is
-gated by **Entra ID** — so the App Service settings hold zero plaintext secrets.
+Configured Managed Identity for the API→SQL and API→Service Bus paths. The API now reaches SQL and Service Bus with its managed identity. The one secret it can't replace with a token sits behind a Key Vault reference, and the front door is gated by Entra ID. Thus, the App Service settings hold zero plaintext secrets.
 
 ---
 
@@ -248,12 +246,12 @@ ExternalFlightFeed__ApiKey            @Microsoft.KeyVault(SecretUri=https://flig
 
 The live app settings from the CLI — none of the three values is a plaintext secret.
 
-![Terminal proof — the three app settings, none a plaintext secret](appsettings_no_secrets_cli.png)
+![appsettings_no_secrets_cli.png](appsettings_no_secrets_cli.png)
 
 The same settings in the portal — the Service Bus value is a hostname and the feed key
 reads `@Microsoft.KeyVault(...)` with a green check.
 
-![App settings — hostname + Key Vault reference (green check), no plaintext secret](appsettings_no_secrets.png)
+![appsettings_no_secrets.png](appsettings_no_secrets.png)
 
 ---
 
@@ -274,32 +272,32 @@ Every change pulls one more secret out of configuration and replaces it with ide
 
 System-assigned managed identity on the web app — Status On with an Object (principal) ID.
 
-![System-assigned managed identity — Status On + Object (principal) ID](mi_identity.png)
+![mi_identity.png](mi_identity.png)
 
 SQL server set to Microsoft Entra admin with "Support only Microsoft Entra authentication"
 checked.
 
-![SQL server — Microsoft Entra admin set, Entra-only authentication checked](sql_entra_only.png)
+![sql_entra_only.png](sql_entra_only.png)
 
 The FlightDex connection string uses `Authentication=Active Directory Default` — no
 `User Id` or `Password`.
 
-![Connection string — FlightDex uses Active Directory Default, no User Id / Password](connstr_aad.png)
+![connstr_aad.png](connstr_aad.png)
 
 Service Bus namespace JSON view showing `"disableLocalAuth": true`.
 
-![Service Bus namespace JSON View — "disableLocalAuth": true](service_bus_LocalAuth_Disabled.png)
+![service_bus_LocalAuth_Disabled.png](service_bus_LocalAuth_Disabled.png)
 
 The MI's Azure role assignments — Data Sender, Data Receiver, and Key Vault Secrets User.
 
-![Azure role assignments on the MI — Data Sender, Data Receiver, Key Vault Secrets User](mi_role_assignments.png)
+![mi_role_assignments.png](mi_role_assignments.png)
 
 The Key Vault reference setting shows source Key Vault Reference with a green Resolved
 status; the value is never displayed.
 
-![Key Vault Reference Details — Source: Key Vault Reference, Status: Resolved](kv_reference_resolved.png)
+![kv_reference_resolved.png](kv_reference_resolved.png)
 
 App Service authentication enabled, unauthenticated requests returning HTTP 401, with the
 Microsoft identity provider.
 
-![Authentication — Enabled, unauthenticated requests Return HTTP 401, Microsoft provider](easy_auth.png)
+![easy_auth.png](easy_auth.png)
