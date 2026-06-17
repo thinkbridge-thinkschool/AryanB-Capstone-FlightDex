@@ -1,6 +1,10 @@
 // ── appService.bicep ─────────────────────────────────────────────────────────
-// Deploys an App Service Plan and a Linux Web App pre-wired with the FlightDex
-// SQL connection string and Service Bus connection string as app settings.
+// App Service Plan + Linux Web App wired for identity end-to-end:
+//   • System-assigned managed identity (used for SQL + Service Bus).
+//   • SQL connection string uses Active Directory auth — no User Id / Password.
+//   • Service Bus is addressed by namespace hostname only — no SAS key.
+//   • The one remaining secret is a Key Vault reference, not a plaintext value.
+//   • Optional Entra ID (Easy Auth) front door when a client ID is supplied.
 
 @description('Web app name — must be globally unique.')
 param appName string
@@ -21,21 +25,19 @@ param sqlServerFqdn string
 @description('SQL Database name.')
 param sqlDatabaseName string
 
-@description('SQL Server administrator login.')
-param sqlAdminUsername string
+@description('Service Bus fully-qualified namespace (e.g. ns.servicebus.windows.net).')
+param serviceBusFqdn string
 
-@description('SQL Server administrator password.')
-@secure()
-param sqlAdminPassword string
+@description('Versionless Key Vault secret URI for the external feed API key.')
+param keyVaultSecretUri string
 
-@description('Service Bus primary connection string (Send + Listen).')
-@secure()
-param serviceBusConnectionString string
+@description('Entra ID app-registration (client) ID for Easy Auth. Empty leaves auth off.')
+param entraAuthClientId string = ''
 
 param tags object = {}
 
-// Built here so the password never surfaces in an output.
-var sqlConnectionString = 'Server=tcp:${sqlServerFqdn},1433;Database=${sqlDatabaseName};User Id=${sqlAdminUsername};Password=${sqlAdminPassword};Encrypt=True;TrustServerCertificate=False;MultipleActiveResultSets=True;'
+// AAD-token auth — note there is no password in this string.
+var sqlConnectionString = 'Server=tcp:${sqlServerFqdn},1433;Database=${sqlDatabaseName};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;MultipleActiveResultSets=True;'
 
 // ── App Service Plan ──────────────────────────────────────────────────────────
 
@@ -59,22 +61,32 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   location: location
   tags: tags
   kind: 'app,linux'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: 'DOTNETCORE|10.0'
-      http20Enabled: true
-      minTlsVersion: '1.2'
-      ftpsState: 'Disabled'
+      http20Enabled:  true
+      minTlsVersion:  '1.2'
+      ftpsState:      'Disabled'
       appSettings: [
         {
           name: 'ASPNETCORE_ENVIRONMENT'
           value: 'Production'
         }
         {
-          name: 'ServiceBus__ConnectionString'
-          value: serviceBusConnectionString
+          // Hostname only — the SDK uses DefaultAzureCredential against it.
+          name: 'ServiceBus__FullyQualifiedNamespace'
+          value: serviceBusFqdn
+        }
+        {
+          // Key Vault reference — App Service resolves it via the MI at runtime.
+          // The literal secret value is never stored here.
+          name: 'ExternalFlightFeed__ApiKey'
+          value: '@Microsoft.KeyVault(SecretUri=${keyVaultSecretUri})'
         }
       ]
       connectionStrings: [
@@ -88,7 +100,36 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
+// ── Entra ID app auth (Easy Auth) ───────────────────────────────────────────────
+// Enabled only when a client ID is provided, so the template still deploys
+// before the app registration exists.
+resource authSettings 'Microsoft.Web/sites/config@2023-01-01' = if (!empty(entraAuthClientId)) {
+  parent: webApp
+  name: 'authsettingsV2'
+  properties: {
+    globalValidation: {
+      requireAuthentication:       true
+      unauthenticatedClientAction: 'Return401'
+    }
+    identityProviders: {
+      azureActiveDirectory: {
+        enabled: true
+        registration: {
+          openIdIssuer: '${environment().authentication.loginEndpoint}${subscription().tenantId}/v2.0'
+          clientId:     entraAuthClientId
+        }
+        validation: {
+          allowedAudiences: [
+            'api://${entraAuthClientId}'
+          ]
+        }
+      }
+    }
+  }
+}
+
 // ── Outputs ───────────────────────────────────────────────────────────────────
 
 output defaultHostName string = webApp.properties.defaultHostName
 output webAppId        string = webApp.id
+output principalId     string = webApp.identity.principalId

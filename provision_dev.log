@@ -1,0 +1,29 @@
+
+Provisioning Azure resources (azd provision)
+Provisioning Azure resources can take some time.
+
+Initialize bicep provider
+Reading subscription and location from environment...
+Subscription: Azure for Students (f2ab3e93-bb60-46ed-bb28-c8c15a1af0f7)
+Location: East Asia
+
+
+  WARNING: Feature 'deployment.stacks' is in alpha stage.
+  To learn more about alpha features and their support, visit https://aka.ms/azd-feature-stages.
+
+Creating a deployment plan
+Comparing deployment state
+Validating deployment
+Creating/Updating resources
+  You can view detailed progress in the Azure Portal:
+  https://portal.azure.com/#view/HubsExtension/DeploymentDetailsBlade/~/overview/id/%2Fsubscriptions%2Ff2ab3e93-bb60-46ed-bb28-c8c15a1af0f7%2FresourceGroups%2Frg-dev%2Fproviders%2FMicrosoft.Resources%2Fdeployments%2Fazd-stack-dev-260617062mqtr
+
+  (✓) Done: Service Bus Namespace: flightdex-bus-dev-bmx2yg (20.775s)
+  (✓) Done: Key Vault: flightdex-kv-dev-bmx2yg (19.173s)
+  (✓) Done: Azure SQL Server: flightdex-sql-dev-bmx2yg (53.11s)
+  (✓) Done: App Service plan: flightdex-plan-dev-bmx2yg (6.998s)
+  (✓) Done: App Service: flightdex-api-dev-bmx2yg (33.14s)
+
+SUCCESS: Your application was provisioned in Azure in 4 minutes 32 seconds.
+You can view the resources created under the resource group rg-dev in Azure Portal:
+https://portal.azure.com/#@/resource/subscriptions/f2ab3e93-bb60-46ed-bb28-c8c15a1af0f7/resourceGroups/rg-dev/overview
