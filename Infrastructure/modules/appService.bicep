@@ -34,6 +34,9 @@ param keyVaultSecretUri string
 @description('Entra ID app-registration (client) ID for Easy Auth. Empty leaves auth off.')
 param entraAuthClientId string = ''
 
+@description('Application Insights connection string for telemetry export.')
+param appInsightsConnectionString string = ''
+
 param tags object = {}
 
 // AAD-token auth — note there is no password in this string.
@@ -88,6 +91,11 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
           name: 'ExternalFlightFeed__ApiKey'
           value: '@Microsoft.KeyVault(SecretUri=${keyVaultSecretUri})'
         }
+        {
+          // OpenTelemetry (Azure Monitor distro) reads this on startup.
+          name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+          value: appInsightsConnectionString
+        }
       ]
       connectionStrings: [
         {
@@ -133,3 +141,4 @@ resource authSettings 'Microsoft.Web/sites/config@2023-01-01' = if (!empty(entra
 output defaultHostName string = webApp.properties.defaultHostName
 output webAppId        string = webApp.id
 output principalId     string = webApp.identity.principalId
+output planId          string = plan.id

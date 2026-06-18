@@ -88,28 +88,56 @@ module kv 'modules/keyVault.bicep' = {
   }
 }
 
-module app 'modules/appService.bicep' = {
-  name: 'deploy-app-${environmentName}'
+// Workspace-based Application Insights — telemetry sink for the API and worker.
+module monitor 'modules/appInsights.bicep' = {
+  name: 'deploy-ai-${environmentName}'
   params: {
-    appName:           'flightdex-api-${environmentName}-${suffix}'
-    planName:          'flightdex-plan-${environmentName}-${suffix}'
-    location:          location
-    skuName:           appServiceSkuName
-    sqlServerFqdn:     sql.outputs.serverFqdn
-    sqlDatabaseName:   sql.outputs.databaseName
-    serviceBusFqdn:    bus.outputs.fullyQualifiedNamespace
-    keyVaultSecretUri: kv.outputs.secretUri
-    entraAuthClientId: entraAuthClientId
-    tags:              tags
+    name:          'flightdex-ai-${environmentName}-${suffix}'
+    workspaceName: 'flightdex-law-${environmentName}-${suffix}'
+    location:      location
+    tags:          tags
   }
 }
 
-// Grants the app's managed identity Send/Receive on Service Bus and read on
-// Key Vault. Runs last because it needs the app's principal ID.
+module app 'modules/appService.bicep' = {
+  name: 'deploy-app-${environmentName}'
+  params: {
+    appName:                     'flightdex-api-${environmentName}-${suffix}'
+    planName:                    'flightdex-plan-${environmentName}-${suffix}'
+    location:                    location
+    skuName:                     appServiceSkuName
+    sqlServerFqdn:               sql.outputs.serverFqdn
+    sqlDatabaseName:             sql.outputs.databaseName
+    serviceBusFqdn:              bus.outputs.fullyQualifiedNamespace
+    keyVaultSecretUri:           kv.outputs.secretUri
+    entraAuthClientId:           entraAuthClientId
+    appInsightsConnectionString: monitor.outputs.connectionString
+    tags:                        tags
+  }
+}
+
+// The Service Bus consumer — shares the API's plan, reaches SQL/Service Bus by identity.
+module worker 'modules/workerService.bicep' = {
+  name: 'deploy-worker-${environmentName}'
+  params: {
+    appName:                     'flightdex-worker-${environmentName}-${suffix}'
+    serverFarmId:                app.outputs.planId
+    location:                    location
+    sqlServerFqdn:               sql.outputs.serverFqdn
+    sqlDatabaseName:             sql.outputs.databaseName
+    serviceBusFqdn:              bus.outputs.fullyQualifiedNamespace
+    appInsightsConnectionString: monitor.outputs.connectionString
+    tags:                        tags
+  }
+}
+
+// Grants Send (API) / Receive (worker) on Service Bus and read on Key Vault (API).
+// Runs last because it needs both apps' principal IDs.
 module rbac 'modules/rbac.bicep' = {
   name: 'deploy-rbac-${environmentName}'
   params: {
-    principalId:             app.outputs.principalId
+    apiPrincipalId:          app.outputs.principalId
+    workerPrincipalId:       worker.outputs.principalId
     serviceBusNamespaceName: bus.outputs.namespaceName
     keyVaultName:            kv.outputs.vaultName
   }
@@ -118,7 +146,10 @@ module rbac 'modules/rbac.bicep' = {
 // ── Outputs ───────────────────────────────────────────────────────────────────
 
 output apiUrl             string = 'https://${app.outputs.defaultHostName}'
+output workerUrl          string = 'https://${worker.outputs.defaultHostName}'
 output sqlServerFqdn      string = sql.outputs.serverFqdn
 output serviceBusEndpoint string = bus.outputs.endpoint
 output keyVaultUri        string = kv.outputs.vaultUri
 output apiPrincipalId     string = app.outputs.principalId
+output workerPrincipalId  string = worker.outputs.principalId
+output appInsightsName    string = monitor.outputs.componentName

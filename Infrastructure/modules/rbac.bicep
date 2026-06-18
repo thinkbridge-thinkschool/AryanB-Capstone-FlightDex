@@ -1,10 +1,14 @@
 // ── rbac.bicep ────────────────────────────────────────────────────────────────
 // Data-plane role assignments that replace every connection-string secret with
-// identity. Runs after the web app exists so its system-assigned principal ID
-// is available. All three assignments target the app's managed identity.
+// identity. Runs after the apps exist so their system-assigned principal IDs are
+// available. The API publishes (Send) and reads the feed key (Key Vault); the
+// worker consumes (Receive).
 
-@description('System-assigned principal ID of the API web app.')
-param principalId string
+@description('System-assigned principal ID of the API web app (publisher).')
+param apiPrincipalId string
+
+@description('System-assigned principal ID of the worker web app (consumer).')
+param workerPrincipalId string
 
 param serviceBusNamespaceName string
 param keyVaultName string
@@ -22,35 +26,35 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
-// ── Service Bus: Send ───────────────────────────────────────────────────────────
-resource sbSender 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+// ── API → Service Bus: Send ──────────────────────────────────────────────────────
+resource apiSbSender 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: serviceBusNamespace
-  name: guid(serviceBusNamespace.id, principalId, sbDataSenderRoleId)
+  name: guid(serviceBusNamespace.id, apiPrincipalId, sbDataSenderRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', sbDataSenderRoleId)
-    principalId:      principalId
+    principalId:      apiPrincipalId
     principalType:    'ServicePrincipal'
   }
 }
 
-// ── Service Bus: Receive ─────────────────────────────────────────────────────────
-resource sbReceiver 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+// ── Worker → Service Bus: Receive ────────────────────────────────────────────────
+resource workerSbReceiver 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: serviceBusNamespace
-  name: guid(serviceBusNamespace.id, principalId, sbDataReceiverRoleId)
+  name: guid(serviceBusNamespace.id, workerPrincipalId, sbDataReceiverRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', sbDataReceiverRoleId)
-    principalId:      principalId
+    principalId:      workerPrincipalId
     principalType:    'ServicePrincipal'
   }
 }
 
-// ── Key Vault: read secrets ──────────────────────────────────────────────────────
+// ── API → Key Vault: read secrets ────────────────────────────────────────────────
 resource kvSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: keyVault
-  name: guid(keyVault.id, principalId, kvSecretsUserRoleId)
+  name: guid(keyVault.id, apiPrincipalId, kvSecretsUserRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', kvSecretsUserRoleId)
-    principalId:      principalId
+    principalId:      apiPrincipalId
     principalType:    'ServicePrincipal'
   }
 }

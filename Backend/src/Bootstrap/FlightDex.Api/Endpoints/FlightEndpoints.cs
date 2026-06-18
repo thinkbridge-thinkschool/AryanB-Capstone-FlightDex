@@ -1,3 +1,4 @@
+using FlightDex.IntegrationEvents;
 using FlightDex.SharedKernel.Pagination;
 using FlightDex.Timetable.Application.Queries.GetFlightDetails;
 using FlightDex.Timetable.Application.Queries.GetFlightTimetable;
@@ -87,6 +88,19 @@ public static class FlightEndpoints
                 Arrival   = dto.ArrivalUtc.ToString("HHmm ddMM"),
                 dto.Status
             });
+        });
+
+        // Publishes a FlightUpserted event onto Service Bus; the worker consumes it and
+        // rebuilds the FlightView read model. This is the API → worker → DB trace path.
+        app.MapPost("/flight/{flightId:guid}/reproject", async (
+            Guid flightId,
+            [FromServices] IEventBus eventBus,
+            CancellationToken ct) =>
+        {
+            var integrationEvent = new FlightUpsertedEvent(flightId, Guid.NewGuid(), DateTime.UtcNow);
+            await eventBus.PublishAsync(integrationEvent, ct);
+
+            return Results.Accepted($"/flight/{flightId}", new { flightId, status = "reprojection requested" });
         });
 
         return app;

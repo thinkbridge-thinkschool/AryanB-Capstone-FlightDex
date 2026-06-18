@@ -1,6 +1,9 @@
-<!-- Web host project; references every module's Infrastructure for composition -->
+<!-- Worker host: consumes integration events from Service Bus and projects to SQL.
+     A minimal web host (so App Service has an HTTP health endpoint) whose real job is
+     the ServiceBusEventConsumer background service. -->
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.2" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.5.0" />
   </ItemGroup>
   <ItemGroup>
