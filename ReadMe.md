@@ -1,1 +1,1 @@
-# Day 25 Piece 1 Solution - [D25P1_Solution.md](D25P1_Solution.md)
+# Day 26 Piece 1 - [D26P1_Solution.md](D26P1_Solution.md)
