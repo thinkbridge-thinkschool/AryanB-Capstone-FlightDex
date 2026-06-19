@@ -1,6 +1,5 @@
-# Day 23 Part 1 — FlightDex Infrastructure as Code (Bicep)
-
-Setup the API and seeded around 10 entries to create a basic API for this excercise. Successfully wrote and verified the bicep IaC code.
+# Day 23 Piece 1 — FlightDex Infrastructure as Code (Bicep)
+Set up the API and seeded around 10 entries to create a basic API for this excercise. Successfully wrote and verified the bicep IaC code.
 
 ## Repo layout
 
