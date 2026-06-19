@@ -1,4 +1,4 @@
-# Day 25 Part 1 — Identity End-to-End
+# Day 25 Piece 1 — Identity End-to-End
 
 Configured Managed Identity for the API→SQL and API→Service Bus paths. The API now reaches SQL and Service Bus with its managed identity. The one secret it can't replace with a token sits behind a Key Vault reference, and the front door is gated by Entra ID. Thus, the App Service settings hold zero plaintext secrets.
 
