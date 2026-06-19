@@ -40,6 +40,10 @@ param sqlSkuTier string = 'Basic'
 @allowed(['Basic', 'Standard', 'Premium'])
 param serviceBusSkuName string = 'Basic'
 
+@description('Public network access on the data tier (SQL + Key Vault). Disabled puts them behind private endpoints only.')
+@allowed(['Enabled', 'Disabled'])
+param dataPublicNetworkAccess string = 'Disabled'
+
 // ── Variables ─────────────────────────────────────────────────────────────────
 
 // Six-char suffix derived from the resource group so every name is globally unique.
@@ -53,6 +57,17 @@ var tags = {
 
 // ── Modules ───────────────────────────────────────────────────────────────────
 
+// The private network the data tier sits behind. Created first so the data
+// services and apps can reference its subnets and DNS zones.
+module network 'modules/network.bicep' = {
+  name: 'deploy-network-${environmentName}'
+  params: {
+    vnetName: 'flightdex-vnet-${environmentName}-${suffix}'
+    location: location
+    tags:     tags
+  }
+}
+
 module sql 'modules/sql.bicep' = {
   name: 'deploy-sql-${environmentName}'
   params: {
@@ -64,6 +79,7 @@ module sql 'modules/sql.bicep' = {
     location:             location
     skuName:              sqlSkuName
     skuTier:              sqlSkuTier
+    publicNetworkAccess:  dataPublicNetworkAccess
     tags:                 tags
   }
 }
@@ -84,6 +100,23 @@ module kv 'modules/keyVault.bicep' = {
     vaultName:         'flightdex-kv-${environmentName}-${suffix}'
     location:          location
     externalFeedApiKey: externalFeedApiKey
+    publicNetworkAccess: dataPublicNetworkAccess
+    tags:              tags
+  }
+}
+
+// Private endpoints for the data tier (SQL + Key Vault), placed in snet-data and
+// wired to the private DNS zones. With dataPublicNetworkAccess = 'Disabled' these
+// are the only network path to the data.
+module privateEndpoints 'modules/privateEndpoints.bicep' = {
+  name: 'deploy-pe-${environmentName}'
+  params: {
+    location:          location
+    dataSubnetId:      network.outputs.dataSubnetId
+    sqlServerId:       sql.outputs.serverId
+    keyVaultId:        kv.outputs.vaultId
+    sqlDnsZoneId:      network.outputs.sqlDnsZoneId
+    keyVaultDnsZoneId: network.outputs.keyVaultDnsZoneId
     tags:              tags
   }
 }
@@ -112,6 +145,7 @@ module app 'modules/appService.bicep' = {
     keyVaultSecretUri:           kv.outputs.secretUri
     entraAuthClientId:           entraAuthClientId
     appInsightsConnectionString: monitor.outputs.connectionString
+    vnetIntegrationSubnetId:     network.outputs.appSubnetId
     tags:                        tags
   }
 }
@@ -127,6 +161,7 @@ module worker 'modules/workerService.bicep' = {
     sqlDatabaseName:             sql.outputs.databaseName
     serviceBusFqdn:              bus.outputs.fullyQualifiedNamespace
     appInsightsConnectionString: monitor.outputs.connectionString
+    vnetIntegrationSubnetId:     network.outputs.workerSubnetId
     tags:                        tags
   }
 }

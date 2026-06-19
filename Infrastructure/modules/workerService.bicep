@@ -29,6 +29,9 @@ param serviceBusFqdn string
 @description('Application Insights connection string for telemetry export.')
 param appInsightsConnectionString string
 
+@description('Subnet ID for regional VNet integration, so outbound traffic reaches the data-tier private endpoints. Empty leaves the worker off-VNet.')
+param vnetIntegrationSubnetId string = ''
+
 param tags object = {}
 
 // AAD-token auth — note there is no password in this string.
@@ -45,6 +48,8 @@ resource workerApp 'Microsoft.Web/sites@2023-01-01' = {
   properties: {
     serverFarmId: serverFarmId
     httpsOnly: true
+    // Regional VNet integration so the worker reaches SQL over its private endpoint.
+    virtualNetworkSubnetId: empty(vnetIntegrationSubnetId) ? null : vnetIntegrationSubnetId
     siteConfig: {
       linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn:       true   // keep the background consumer resident
@@ -52,6 +57,7 @@ resource workerApp 'Microsoft.Web/sites@2023-01-01' = {
       minTlsVersion:  '1.2'
       ftpsState:      'Disabled'
       healthCheckPath: '/healthz'
+      vnetRouteAllEnabled: !empty(vnetIntegrationSubnetId)
       appSettings: [
         {
           name: 'ASPNETCORE_ENVIRONMENT'

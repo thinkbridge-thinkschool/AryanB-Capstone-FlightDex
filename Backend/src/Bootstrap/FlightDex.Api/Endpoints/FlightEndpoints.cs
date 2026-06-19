@@ -10,7 +10,11 @@ public static class FlightEndpoints
 {
     public static IEndpointRouteBuilder MapFlightEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/flight", async (
+        // All routes live under an explicit version segment so the contract can evolve
+        // (a future /v2) without breaking existing clients pinned to /v1.
+        var v1 = app.MapGroup("/v1");
+
+        v1.MapGet("/flight", async (
             [FromServices] GetFlightTimetableHandler handler,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 15,
@@ -56,7 +60,7 @@ public static class FlightEndpoints
             });
         });
 
-        app.MapGet("/flight/{flightId:guid}", async (
+        v1.MapGet("/flight/{flightId:guid}", async (
             Guid flightId,
             [FromServices] GetFlightDetailsHandler handler,
             CancellationToken ct) =>
@@ -92,7 +96,7 @@ public static class FlightEndpoints
 
         // Publishes a FlightUpserted event onto Service Bus; the worker consumes it and
         // rebuilds the FlightView read model. This is the API → worker → DB trace path.
-        app.MapPost("/flight/{flightId:guid}/reproject", async (
+        v1.MapPost("/flight/{flightId:guid}/reproject", async (
             Guid flightId,
             [FromServices] IEventBus eventBus,
             CancellationToken ct) =>

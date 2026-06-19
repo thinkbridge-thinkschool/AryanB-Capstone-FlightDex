@@ -24,6 +24,10 @@ param skuName string = 'Basic'
 @description('SQL Database pricing tier — Basic or Standard.')
 param skuTier string = 'Basic'
 
+@description('Public network access. Disabled once the server sits behind a private endpoint.')
+@allowed(['Enabled', 'Disabled'])
+param publicNetworkAccess string = 'Disabled'
+
 param tags object = {}
 
 // ── SQL Server (Entra-only) ─────────────────────────────────────────────────────
@@ -35,7 +39,7 @@ resource server 'Microsoft.Sql/servers@2023-08-01-preview' = {
   properties: {
     version:             '12.0'
     minimalTlsVersion:   '1.2'
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: publicNetworkAccess
     // No administratorLogin / administratorLoginPassword: the server is
     // provisioned Entra-only, so there is no SQL password to store or leak.
     administrators: {
@@ -49,8 +53,10 @@ resource server 'Microsoft.Sql/servers@2023-08-01-preview' = {
   }
 }
 
-// Allows Azure-hosted services (including App Service) to reach the server.
-resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = {
+// Only meaningful while the public endpoint is on. Once publicNetworkAccess is
+// 'Disabled', the App Service reaches SQL over the private endpoint instead and
+// this rule is not created at all (the public listener is gone).
+resource allowAzureServices 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = if (publicNetworkAccess == 'Enabled') {
   parent: server
   name: 'AllowAllAzureServices'
   properties: {
@@ -79,3 +85,4 @@ resource database 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
 
 output serverFqdn   string = server.properties.fullyQualifiedDomainName
 output databaseName string = database.name
+output serverId     string = server.id

@@ -12,6 +12,10 @@ param location string
 @secure()
 param externalFeedApiKey string
 
+@description('Public network access. Disabled once the vault sits behind a private endpoint.')
+@allowed(['Enabled', 'Disabled'])
+param publicNetworkAccess string = 'Disabled'
+
 param tags object = {}
 
 resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -26,7 +30,14 @@ resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     }
     enableRbacAuthorization: true   // RBAC, not access policies
     enableSoftDelete:        true
-    publicNetworkAccess:     'Enabled'
+    publicNetworkAccess:     publicNetworkAccess
+    // Deny the public internet but let the ARM/azd deployment write the secret
+    // through the trusted-Azure-services bypass; the app reads it over the
+    // private endpoint at runtime.
+    networkAcls: {
+      defaultAction: publicNetworkAccess == 'Disabled' ? 'Deny' : 'Allow'
+      bypass:        'AzureServices'
+    }
   }
 }
 
@@ -42,5 +53,6 @@ resource secret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 
 output vaultName  string = vault.name
 output vaultUri   string = vault.properties.vaultUri
+output vaultId    string = vault.id
 // Versionless secret URI so rotation flows through without redeploying the app.
 output secretUri  string = '${vault.properties.vaultUri}secrets/${secret.name}'

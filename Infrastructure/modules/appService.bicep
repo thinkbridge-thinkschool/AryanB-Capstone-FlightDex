@@ -37,6 +37,9 @@ param entraAuthClientId string = ''
 @description('Application Insights connection string for telemetry export.')
 param appInsightsConnectionString string = ''
 
+@description('Subnet ID for regional VNet integration, so outbound traffic reaches the data-tier private endpoints. Empty leaves the app off-VNet.')
+param vnetIntegrationSubnetId string = ''
+
 param tags object = {}
 
 // AAD-token auth — note there is no password in this string.
@@ -70,11 +73,15 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   properties: {
     serverFarmId: plan.id
     httpsOnly: true
+    // Regional VNet integration: route ALL outbound through the VNet so SQL and
+    // Key Vault are reached over their private endpoints, not the public internet.
+    virtualNetworkSubnetId: empty(vnetIntegrationSubnetId) ? null : vnetIntegrationSubnetId
     siteConfig: {
       linuxFxVersion: 'DOTNETCORE|10.0'
       http20Enabled:  true
       minTlsVersion:  '1.2'
       ftpsState:      'Disabled'
+      vnetRouteAllEnabled: !empty(vnetIntegrationSubnetId)
       appSettings: [
         {
           name: 'ASPNETCORE_ENVIRONMENT'
