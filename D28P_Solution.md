@@ -140,12 +140,12 @@ ADR 0002 — Feature: Ticket Booking
 
 ## 3.1 Top Critique
 
-**Little User Involvement**
+**Little User Involvement and User-side use cases**
 
 Given By: Mentor Rushikesh K
 
 Summary of Critique:
-Little User Involvement and User-side uses. The applications shall provide more usability to the end user. Right now, the user can only view the timetable and admins can edit the timetable. 
+Little User Involvement and User-side uses. The applications shall provide more usability to the end user. Right now, the user can only view the timetable and admins can edit the timetable. Implement some features allow the user to interact.
 
 ## 3.2 Changes Made
 
