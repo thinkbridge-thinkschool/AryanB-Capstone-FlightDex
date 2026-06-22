@@ -1,8 +1,6 @@
 # Day 28 — Design Review: Ticket Booking
 
-Reviewed three candidate features as ADRs, chose Ticket Booking, and drafted a 4-day full-stack build plan. The driving critique from the prior review was **too little user involvement — the app had no input points** — so the accepted change adds a write-path **Ticket Booking** feature that lets users act on the data instead of only reading it.
-
----
+Came up with three prospective features. Wrote ADRs and chose the decision that matters the most. Designed the 4 day build-plan. The top critique was regarding "Too Little User Invovement" given my mentor Rushikesh K in the recent review. This critique drove the change to add a ticket booking system to the project. 
 
 # 1. ADR
 
@@ -47,8 +45,6 @@ ADR 0002 — Feature: Ticket Booking
 
 1. External payment provider with a saga and seat-inventory concurrency — rejected as out of scope.
 2. A separate booking microservice — deferred; the modular monolith is sufficient.
-
----
 
 # 2. Build Plan
 
@@ -133,8 +129,6 @@ ADR 0002 — Feature: Ticket Booking
    1. Short retro doc: what worked, what was cut, follow-ups (e.g. real auth provider, per-cabin seat inventory).
 
 **End-of-day acceptance:** deployed environment passes the demo script; retro committed under `docs/`.
-
----
 
 # 3. Top Critique
 
