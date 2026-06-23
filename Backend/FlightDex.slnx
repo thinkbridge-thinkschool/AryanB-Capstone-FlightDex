@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FlightDex.Api/FlightDex.Api.csproj" />
+    <Project Path="src/FlightDex.Booking.Application/FlightDex.Booking.Application.csproj" />
+    <Project Path="src/FlightDex.Booking.Domain/FlightDex.Booking.Domain.csproj" />
+    <Project Path="src/FlightDex.Booking.Infrastructure/FlightDex.Booking.Infrastructure.csproj" />
+    <Project Path="src/FlightDex.Flights.Application/FlightDex.Flights.Application.csproj" />
+    <Project Path="src/FlightDex.Flights.Domain/FlightDex.Flights.Domain.csproj" />
+    <Project Path="src/FlightDex.Flights.Infrastructure/FlightDex.Flights.Infrastructure.csproj" />
+    <Project Path="src/FlightDex.SharedKernel/FlightDex.SharedKernel.csproj" />
+  </Folder>
+</Solution>
