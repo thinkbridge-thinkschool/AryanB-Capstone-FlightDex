@@ -1,4 +1,7 @@
 namespace FlightDex.SharedKernel.Cqrs;
 
-/// <summary>Marker for a command that returns a result.</summary>
+/// <summary>
+/// Marker interface for a CQRS command that returns <typeparamref name="TResult"/>.
+/// Commands change state (register a user, book or cancel a ticket); queries do not.
+/// </summary>
 public interface ICommand<TResult>;

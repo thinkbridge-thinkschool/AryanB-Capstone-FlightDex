@@ -1,4 +1,7 @@
 namespace FlightDex.SharedKernel.Cqrs;
 
-/// <summary>Marker for a query that returns a result.</summary>
+/// <summary>
+/// Marker interface for a CQRS query that returns <typeparamref name="TResult"/>.
+/// Queries are read-only and must never mutate state.
+/// </summary>
 public interface IQuery<TResult>;
