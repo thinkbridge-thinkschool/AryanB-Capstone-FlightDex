@@ -1,0 +1,55 @@
+:root {
+  --ink: #0f172a;
+  --muted: #64748b;
+  --accent: #2563eb;
+  --line: #e2e8f0;
+  --row-hover: #f1f5f9;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* ---- Shared, app-wide helpers (used by every routed page) ------------- */
+
+.container { max-width: 1280px; margin: 0 auto; padding: 22px 16px 64px; }
+
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.05); }
+.btn.ghost { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
+.btn.danger { background: #dc2626; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+.muted { color: var(--muted); }
+.error { color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; padding: 10px 12px; border-radius: 8px; }
+.success { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 12px; border-radius: 8px; }
+
+/* Form primitives shared across login / booking pages. */
+.input, input.input, select.input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  color: var(--ink);
+}
+.input:focus { outline: 2px solid #bfdbfe; border-color: var(--accent); }
+.field-label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 6px; }

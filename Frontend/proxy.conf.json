@@ -1,0 +1,17 @@
+{
+  "/flight": {
+    "target": "http://localhost:5162",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/auth": {
+    "target": "http://localhost:5162",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/ticket": {
+    "target": "http://localhost:5162",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

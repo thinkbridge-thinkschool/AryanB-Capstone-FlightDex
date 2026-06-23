@@ -1,0 +1,36 @@
+<header class="topbar">
+  <div class="topbar-overlay">
+    <div class="topbar-row">
+      <a class="brand" routerLink="/timetable">FlightDex</a>
+
+      <!-- Centre: the three nav tabs. Book Tickets / MyTickets are guarded — when
+           signed out the guard sends the user to the login form. -->
+      <nav class="nav-tabs">
+        <a routerLink="/timetable" routerLinkActive="active">Timetable</a>
+        <a routerLink="/book" routerLinkActive="active">Book Tickets</a>
+        <a routerLink="/mytickets" routerLinkActive="active">MyTickets</a>
+      </nav>
+
+      <!-- Right corner: Login button, or the user's first name once signed in. -->
+      <div class="auth-area">
+        @if (auth.user(); as u) {
+          <div class="user-menu">
+            <button class="user-btn" (click)="toggleMenu()">
+              {{ u.firstName }} <span class="caret">▾</span>
+            </button>
+            @if (menuOpen()) {
+              <div class="user-dropdown">
+                <span class="user-email">{{ u.email }}</span>
+                <button class="link-btn" (click)="logout()">Log out</button>
+              </div>
+            }
+          </div>
+        } @else {
+          <a class="login-btn" routerLink="/login">Login</a>
+        }
+      </div>
+    </div>
+  </div>
+</header>
+
+<router-outlet />

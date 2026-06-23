@@ -1,0 +1,189 @@
+<!-- "You are currently at" bar -->
+<section class="at-bar">
+  <label for="at">You are currently at:</label>
+  <input id="at" list="airport-aliases" placeholder="Enter City, Airport Name or Code"
+         [ngModel]="airportSearch()" (ngModelChange)="airportSearch.set($event)"
+         (change)="applyAirportSearch()" (keyup.enter)="applyAirportSearch()" />
+  <span class="current-at">{{ at() }} &middot; {{ currentAirportLabel() }}</span>
+
+  <datalist id="airport-aliases">
+    @for (alias of aliasSuggestions; track alias) {
+      <option [value]="alias"></option>
+    }
+  </datalist>
+</section>
+
+<!-- Long search bar -->
+<section class="search-bar">
+  <span class="search-title">Search</span>
+
+  <form class="search-fields" (ngSubmit)="doSearch()">
+    <div class="field">
+      <label for="arriveFrom">Arriving From:</label>
+      <input id="arriveFrom" type="text" name="arriveFrom" placeholder="Enter Origin Airport"
+             [ngModel]="arriveFrom()" (ngModelChange)="arriveFrom.set($event)" />
+    </div>
+
+    <div class="field">
+      <label for="departTo">Departing To:</label>
+      <input id="departTo" type="text" name="departTo" placeholder="Enter Destination Airport"
+             [ngModel]="departTo()" (ngModelChange)="departTo.set($event)" />
+    </div>
+
+    <button type="button" class="more-toggle" (click)="toggleMoreOptions()" [class.open]="moreOptions()">
+      More Search Options <span class="caret">{{ moreOptions() ? '▲' : '▼' }}</span>
+    </button>
+
+    <button type="submit" class="btn">Search</button>
+  </form>
+</section>
+
+@if (moreOptions()) {
+  <section class="more-panel">
+    <div class="more-row">
+      <span class="row-label">Departing between:</span>
+      <input type="time" [ngModel]="deptAfter()" (ngModelChange)="deptAfter.set($event)" />
+      <span class="and">and</span>
+      <input type="time" [ngModel]="deptBefore()" (ngModelChange)="deptBefore.set($event)" />
+    </div>
+    <div class="more-row">
+      <span class="row-label">Arriving between:</span>
+      <input type="time" [ngModel]="arrAfter()" (ngModelChange)="arrAfter.set($event)" />
+      <span class="and">and</span>
+      <input type="time" [ngModel]="arrBefore()" (ngModelChange)="arrBefore.set($event)" />
+    </div>
+    <button type="button" class="btn" (click)="doSearch()">Apply</button>
+  </section>
+}
+
+@if (airportError()) {
+  <p class="error small container">{{ airportError() }}</p>
+}
+
+<main class="container">
+  <!-- Results -->
+  <section class="results">
+    <div class="results-head">
+      <h2>{{ resultsTitle() }}</h2>
+      @if (view() !== 'both') {
+        <button class="btn ghost" (click)="showBoth()">Show departures &amp; arrivals</button>
+      }
+    </div>
+
+    <div class="boxes" [class.single]="view() !== 'both'">
+      <!-- Departures box -->
+      @if (view() === 'both' || view() === 'departures') {
+        <div class="box">
+          <div class="box-head dep">
+            <h3>Departures</h3>
+          </div>
+          <div class="box-list">
+            @if (departures().loading) {
+              <p class="muted pad">Loading&hellip;</p>
+            } @else if (departures().error) {
+              <p class="error pad">{{ departures().error }}</p>
+            } @else if (departures().result; as r) {
+              @if (r.items.length === 0) {
+                <p class="muted pad">No departures match.</p>
+              } @else {
+                <table class="flights">
+                  <thead>
+                    <tr><th>Time</th><th>Flight</th><th>Airline</th><th>Destination</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    @for (f of r.items; track f.flightCode + f.time) {
+                      <tr class="clickable" (click)="openDetail(f.flightCode)">
+                        <td class="time">{{ f.time }}</td>
+                        <td class="code">{{ f.flightCode }}</td>
+                        <td>{{ f.airline }}</td>
+                        <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
+                        <td class="chev">&rsaquo;</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            }
+          </div>
+          @if (departures().result; as r) {
+            <div class="box-foot">
+              <button class="btn ghost" [disabled]="!r.hasPrevious" (click)="goToDeparturePage(r.page - 1)">&larr; Prev</button>
+              <span>Page {{ r.page }} of {{ r.totalPages }}</span>
+              <button class="btn ghost" [disabled]="!r.hasNext" (click)="goToDeparturePage(r.page + 1)">Next &rarr;</button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Arrivals box -->
+      @if (view() === 'both' || view() === 'arrivals') {
+        <div class="box">
+          <div class="box-head arr">
+            <h3>Arrivals</h3>
+          </div>
+          <div class="box-list">
+            @if (arrivals().loading) {
+              <p class="muted pad">Loading&hellip;</p>
+            } @else if (arrivals().error) {
+              <p class="error pad">{{ arrivals().error }}</p>
+            } @else if (arrivals().result; as r) {
+              @if (r.items.length === 0) {
+                <p class="muted pad">No arrivals match.</p>
+              } @else {
+                <table class="flights">
+                  <thead>
+                    <tr><th>Time</th><th>Flight</th><th>Airline</th><th>Origin</th><th></th></tr>
+                  </thead>
+                  <tbody>
+                    @for (f of r.items; track f.flightCode + f.time) {
+                      <tr class="clickable" (click)="openDetail(f.flightCode)">
+                        <td class="time">{{ f.time }}</td>
+                        <td class="code">{{ f.flightCode }}</td>
+                        <td>{{ f.airline }}</td>
+                        <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
+                        <td class="chev">&rsaquo;</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            }
+          </div>
+          @if (arrivals().result; as r) {
+            <div class="box-foot">
+              <button class="btn ghost" [disabled]="!r.hasPrevious" (click)="goToArrivalPage(r.page - 1)">&larr; Prev</button>
+              <span>Page {{ r.page }} of {{ r.totalPages }}</span>
+              <button class="btn ghost" [disabled]="!r.hasNext" (click)="goToArrivalPage(r.page + 1)">Next &rarr;</button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+</main>
+
+<!-- Flight detail modal -->
+@if (detailLoading() || selected()) {
+  <div class="modal-backdrop" (click)="closeDetail()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      @if (detailLoading()) {
+        <p class="muted">Loading details&hellip;</p>
+      } @else if (selected(); as d) {
+        <div class="modal-head">
+          <h3>{{ d.flightCode }}</h3>
+          <button class="close" (click)="closeDetail()" aria-label="Close">&times;</button>
+        </div>
+        <span class="badge" [class.arr]="d.direction === 'Arrival'">
+          {{ d.direction }} &middot; {{ d.airport }}
+        </span>
+        <dl class="detail">
+          <dt>Airline</dt><dd>{{ d.airline }} ({{ d.airlineCode }})</dd>
+          <dt>{{ d.direction === 'Departure' ? 'Departs' : 'Arrives' }}</dt><dd>{{ d.time }}</dd>
+          <dt>{{ d.direction === 'Departure' ? 'Destination' : 'Origin' }}</dt>
+          <dd>{{ d.counterpartCity }} &mdash; {{ d.counterpartAirport }} ({{ d.counterpartCode }})</dd>
+          <dt>Duration</dt><dd>{{ d.duration }}</dd>
+        </dl>
+      }
+    </div>
+  </div>
+}
