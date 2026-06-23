@@ -1,0 +1,23 @@
+# Source timetable exports (kept out of version control per project setup)
+Local
+
+# .NET build output
+[Bb]in/
+[Oo]bj/
+*.user
+
+# Angular / Node
+client/node_modules/
+client/dist/
+client/.angular/
+
+# Generated migration script artifact (regenerate with dotnet ef)
+artifacts/
+
+# IDE / OS
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+Thumbs.db
+.DS_Store
