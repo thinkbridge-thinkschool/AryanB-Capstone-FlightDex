@@ -3,7 +3,7 @@ using FlightDex.SharedKernel.Cqrs;
 
 namespace FlightDex.Booking.Application.Commands.RegisterUser;
 
-/// <summary>Registers a new account and signs it in immediately.</summary>
+/// <summary>Creates a new account and returns a token so the user is signed in immediately.</summary>
 public sealed record RegisterUserCommand(
     string Email,
     string FirstName,

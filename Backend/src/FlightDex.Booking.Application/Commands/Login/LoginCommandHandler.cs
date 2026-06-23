@@ -9,9 +9,17 @@ internal sealed class LoginCommandHandler(
     IPasswordHasher passwordHasher,
     IJwtTokenService tokens) : ICommandHandler<LoginCommand, AuthResult>
 {
-    public Task<AuthResult> HandleAsync(LoginCommand command, CancellationToken cancellationToken = default)
+    public async Task<AuthResult> HandleAsync(LoginCommand command, CancellationToken cancellationToken = default)
     {
-        // TODO: load by email, verify password, throw InvalidCredentialsException on mismatch, issue token.
-        throw new NotImplementedException();
+        var email = command.Email.Trim().ToLowerInvariant();
+        var user = await users.GetByEmailAsync(email, cancellationToken);
+
+        // Same error whether the email is unknown or the password is wrong — don't leak
+        // which accounts exist.
+        if (user is null || !passwordHasher.Verify(command.Password, user.PasswordHash, user.PasswordSalt))
+            throw new InvalidCredentialsException();
+
+        var token = tokens.Create(user);
+        return new AuthResult(token.Token, token.ExpiresAtUtc, UserDto.FromDomain(user));
     }
 }

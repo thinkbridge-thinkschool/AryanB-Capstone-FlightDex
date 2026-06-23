@@ -1,6 +1,6 @@
 namespace FlightDex.Api.Contracts;
 
-/// <summary>Request body for POST /auth/register.</summary>
+/// <summary>Registration payload — all profile fields plus the chosen password.</summary>
 public sealed record RegisterRequest(
     string Email,
     string FirstName,
@@ -10,5 +10,5 @@ public sealed record RegisterRequest(
     bool IsLawEnforcementOrMilitary,
     string Password);
 
-/// <summary>Request body for POST /auth/login.</summary>
+/// <summary>Login payload.</summary>
 public sealed record LoginRequest(string Email, string Password);
