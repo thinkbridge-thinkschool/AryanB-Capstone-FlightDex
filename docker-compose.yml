@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: ./Backend
+    environment:
+      # SQLite files on a named volume so data survives container restarts.
+      ConnectionStrings__FlightDex: "Data Source=/data/flightdex.db"
+      ConnectionStrings__Booking: "Data Source=/data/flightdex-booking.db"
+      # Override in real deployments with a long, random secret.
+      Jwt__Key: "flightdex-dev-signing-key-change-me-in-production-0123456789"
+      ASPNETCORE_ENVIRONMENT: "Production"
+    volumes:
+      - flightdex-data:/data
+    ports:
+      - "5162:8080"   # optional: hit the API directly at http://localhost:5162/flight?at=BOM
+
+  web:
+    build:
+      context: ./Frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"     # the UI: http://localhost:8080
+
+volumes:
+  flightdex-data:
