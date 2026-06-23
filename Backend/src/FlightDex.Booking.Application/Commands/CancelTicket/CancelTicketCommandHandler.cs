@@ -6,9 +6,15 @@ namespace FlightDex.Booking.Application.Commands.CancelTicket;
 internal sealed class CancelTicketCommandHandler(ITicketRepository tickets)
     : ICommandHandler<CancelTicketCommand, bool>
 {
-    public Task<bool> HandleAsync(CancelTicketCommand command, CancellationToken cancellationToken = default)
+    public async Task<bool> HandleAsync(CancelTicketCommand command, CancellationToken cancellationToken = default)
     {
-        // TODO: delete the ticket only if it belongs to command.UserId.
-        throw new NotImplementedException();
+        var ticket = await tickets.GetByIdAsync(command.TicketId, cancellationToken);
+
+        // Not found, or owned by another user → treat as "nothing to cancel".
+        if (ticket is null || ticket.UserId != command.UserId)
+            return false;
+
+        await tickets.RemoveAsync(ticket, cancellationToken);
+        return true;
     }
 }

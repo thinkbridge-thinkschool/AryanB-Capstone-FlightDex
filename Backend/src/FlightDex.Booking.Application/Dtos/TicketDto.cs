@@ -2,9 +2,12 @@ using FlightDex.Booking.Domain;
 
 namespace FlightDex.Booking.Application.Dtos;
 
-/// <summary>The shape of a booked ticket returned to the client.</summary>
+/// <summary>
+/// A booked ticket as shown in "My Tickets". Date is "yyyy-MM-dd" and Time is "HH:mm"
+/// so the client never has to reparse a locale-specific date.
+/// </summary>
 public sealed record TicketDto(
-    int Id,
+    int TicketId,
     string Date,
     string Time,
     string OriginCode,
@@ -17,6 +20,17 @@ public sealed record TicketDto(
     string LastName,
     int Age)
 {
-    public static TicketDto FromDomain(Ticket t) =>
-        throw new NotImplementedException(); // TODO: map from the Ticket entity.
+    public static TicketDto FromDomain(Ticket t) => new(
+        t.Id,
+        t.Date.ToString("yyyy-MM-dd"),
+        t.Time.ToString("HH\\:mm"),
+        t.OriginCode,
+        t.OriginAirport,
+        t.OriginCity,
+        t.DestinationCode,
+        t.DestinationAirport,
+        t.DestinationCity,
+        t.FirstName,
+        t.LastName,
+        t.Age);
 }

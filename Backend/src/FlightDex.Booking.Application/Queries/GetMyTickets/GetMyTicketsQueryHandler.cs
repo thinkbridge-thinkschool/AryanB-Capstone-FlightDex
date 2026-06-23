@@ -7,9 +7,10 @@ namespace FlightDex.Booking.Application.Queries.GetMyTickets;
 internal sealed class GetMyTicketsQueryHandler(ITicketRepository tickets)
     : IQueryHandler<GetMyTicketsQuery, IReadOnlyList<TicketDto>>
 {
-    public Task<IReadOnlyList<TicketDto>> HandleAsync(GetMyTicketsQuery query, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TicketDto>> HandleAsync(
+        GetMyTicketsQuery query, CancellationToken cancellationToken = default)
     {
-        // TODO: load the user's tickets and project to TicketDto.
-        throw new NotImplementedException();
+        var owned = await tickets.GetByUserAsync(query.UserId, cancellationToken);
+        return owned.Select(TicketDto.FromDomain).ToList();
     }
 }

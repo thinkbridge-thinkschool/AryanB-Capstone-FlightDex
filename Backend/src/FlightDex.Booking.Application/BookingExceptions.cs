@@ -1,9 +1,9 @@
 namespace FlightDex.Booking.Application;
 
-/// <summary>Thrown when a registration uses an email that already exists.</summary>
+/// <summary>Registration was attempted with an email that already has an account.</summary>
 public sealed class EmailAlreadyInUseException(string email)
-    : Exception($"The email '{email}' is already in use.");
+    : Exception($"An account already exists for '{email}'.");
 
-/// <summary>Thrown when login credentials don't match.</summary>
+/// <summary>Login failed: unknown email or wrong password.</summary>
 public sealed class InvalidCredentialsException()
     : Exception("Invalid email or password.");

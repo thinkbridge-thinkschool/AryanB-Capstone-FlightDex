@@ -7,14 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.0" />
+    <ProjectReference Include="..\FlightDex.Booking.Application\FlightDex.Booking.Application.csproj" />
+    <ProjectReference Include="..\FlightDex.Booking.Domain\FlightDex.Booking.Domain.csproj" />
+    <ProjectReference Include="..\FlightDex.SharedKernel\FlightDex.SharedKernel.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FlightDex.Booking.Application\FlightDex.Booking.Application.csproj" />
-    <ProjectReference Include="..\FlightDex.Booking.Domain\FlightDex.Booking.Domain.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.0" />
   </ItemGroup>
 
 </Project>
