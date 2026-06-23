@@ -11,16 +11,23 @@ public static class DependencyInjection
 {
     public const string ConnectionStringName = "FlightDex";
 
-    /// <summary>Registers the Flights module's persistence: DbContext (SQLite), repository, seeder.</summary>
+    /// <summary>
+    /// Registers the Flights module's persistence: the DbContext (SQLite), the read
+    /// repository, and the CSV timetable seeder.
+    /// </summary>
     public static IServiceCollection AddFlightsInfrastructure(
         this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString(ConnectionStringName)
-            ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is not configured.");
+            ?? throw new InvalidOperationException(
+                $"Connection string '{ConnectionStringName}' is not configured.");
 
-        services.AddDbContext<FlightsDbContext>(options => options.UseSqlite(connectionString));
+        services.AddDbContext<FlightsDbContext>(options =>
+            options.UseSqlite(connectionString));
+
         services.AddScoped<IFlightRepository, FlightRepository>();
         services.AddScoped<FlightTimetableSeeder>();
+
         return services;
     }
 }
