@@ -1,0 +1,120 @@
+<main class="auth-wrap">
+  <div class="auth-card">
+    <h1 class="auth-title">{{ mode() === 'login' ? 'Sign in' : 'Create your account' }}</h1>
+
+    <p class="note">Note: Login to Book Tickets!</p>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <!-- ============================ LOGIN ============================ -->
+    @if (mode() === 'login') {
+      <form (ngSubmit)="submitLogin()">
+        <div class="form-group">
+          <label class="field-label" for="email">Email</label>
+          <input id="email" class="input" type="email" name="email" autocomplete="email"
+                 placeholder="you@example.com"
+                 [ngModel]="email()" (ngModelChange)="email.set($event)" />
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" for="password">Password</label>
+          <input id="password" class="input" type="password" name="password" autocomplete="current-password"
+                 placeholder="Your password"
+                 [ngModel]="password()" (ngModelChange)="password.set($event)" />
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn" [disabled]="loading()">
+            {{ loading() ? 'Signing in…' : 'Login' }}
+          </button>
+          <button type="button" class="btn ghost" [disabled]="loading()" (click)="showRegister()">
+            Register
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ===================== REGISTER — PAGE 1 ====================== -->
+    @if (mode() === 'register' && registerStep() === 1) {
+      <form (ngSubmit)="registerNext()">
+        <div class="form-group">
+          <label class="field-label" for="regEmail">Email</label>
+          <input id="regEmail" class="input" type="email" name="regEmail" autocomplete="email"
+                 placeholder="you@example.com"
+                 [ngModel]="regEmail()" (ngModelChange)="regEmail.set($event)" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="field-label" for="firstName">First name</label>
+            <input id="firstName" class="input" type="text" name="firstName"
+                   [ngModel]="firstName()" (ngModelChange)="firstName.set($event)" />
+          </div>
+          <div class="form-group">
+            <label class="field-label" for="lastName">Last name</label>
+            <input id="lastName" class="input" type="text" name="lastName"
+                   [ngModel]="lastName()" (ngModelChange)="lastName.set($event)" />
+          </div>
+        </div>
+
+        <div class="form-group narrow">
+          <label class="field-label" for="age">Age</label>
+          <input id="age" class="input" type="number" name="age" min="1" max="130"
+                 [ngModel]="age()" (ngModelChange)="age.set($event)" />
+        </div>
+
+        <div class="form-group">
+          <span class="field-label">Government Official</span>
+          <div class="yesno">
+            <label><input type="radio" name="govt" [value]="true"
+                          [ngModel]="isGovernmentOfficial()" (ngModelChange)="isGovernmentOfficial.set($event)" /> Yes</label>
+            <label><input type="radio" name="govt" [value]="false"
+                          [ngModel]="isGovernmentOfficial()" (ngModelChange)="isGovernmentOfficial.set($event)" /> No</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <span class="field-label">Law Enforcement / Military Personnel</span>
+          <div class="yesno">
+            <label><input type="radio" name="law" [value]="true"
+                          [ngModel]="isLawEnforcementOrMilitary()" (ngModelChange)="isLawEnforcementOrMilitary.set($event)" /> Yes</label>
+            <label><input type="radio" name="law" [value]="false"
+                          [ngModel]="isLawEnforcementOrMilitary()" (ngModelChange)="isLawEnforcementOrMilitary.set($event)" /> No</label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn">Next</button>
+          <button type="button" class="btn ghost" (click)="showLogin()">Back to login</button>
+        </div>
+      </form>
+    }
+
+    <!-- ===================== REGISTER — PAGE 2 ====================== -->
+    @if (mode() === 'register' && registerStep() === 2) {
+      <form (ngSubmit)="submitRegister()">
+        <div class="form-group">
+          <label class="field-label" for="regPassword">Password</label>
+          <input id="regPassword" class="input" type="password" name="regPassword" autocomplete="new-password"
+                 placeholder="At least 6 characters"
+                 [ngModel]="regPassword()" (ngModelChange)="regPassword.set($event)" />
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" for="confirmPassword">Confirm password</label>
+          <input id="confirmPassword" class="input" type="password" name="confirmPassword" autocomplete="new-password"
+                 [ngModel]="confirmPassword()" (ngModelChange)="confirmPassword.set($event)" />
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn" [disabled]="loading()">
+            {{ loading() ? 'Creating…' : 'Register' }}
+          </button>
+          <button type="button" class="btn ghost" [disabled]="loading()" (click)="registerBack()">Back</button>
+        </div>
+      </form>
+    }
+  </div>
+</main>
