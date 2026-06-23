@@ -1,0 +1,128 @@
+<main class="container book-wrap">
+  <h1 class="page-title">Book Tickets</h1>
+
+  <section class="search-card">
+    <span class="search-heading">Search</span>
+
+    <form class="book-form" (ngSubmit)="search()">
+      <!-- From (search box) -->
+      <div class="form-group">
+        <label class="field-label" for="from">From</label>
+        <input id="from" class="input" name="from" list="origin-list" autocomplete="off"
+               placeholder="Select your origin airport (BLR, BOM or PNQ)"
+               [ngModel]="from()" (ngModelChange)="onFromChange($event)" />
+        <datalist id="origin-list">
+          @for (a of originSuggestions; track a) { <option [value]="a"></option> }
+        </datalist>
+      </div>
+
+      <!-- To (search box) -->
+      <div class="form-group">
+        <label class="field-label" for="to">To</label>
+        <input id="to" class="input" name="to" list="dest-list" autocomplete="off"
+               placeholder="Select destination (city or code) — leave blank for all"
+               [ngModel]="to()" (ngModelChange)="to.set($event)" />
+        <datalist id="dest-list">
+          @for (d of destinationSuggestions(); track d) { <option [value]="d"></option> }
+        </datalist>
+      </div>
+
+      <!-- Date -->
+      <div class="form-group">
+        <label class="field-label" for="date">Date</label>
+        <input id="date" class="input" type="date" name="date" [min]="today"
+               [ngModel]="date()" (ngModelChange)="date.set($event)" />
+      </div>
+
+      <button type="submit" class="btn book-btn" [disabled]="searching()">
+        {{ searching() ? 'Searching…' : 'Search Flights' }}
+      </button>
+    </form>
+
+    @if (searchError()) { <p class="error">{{ searchError() }}</p> }
+  </section>
+
+  <!-- Flight list -->
+  @if (results(); as flights) {
+    <section class="results-card">
+      <h2 class="results-title">
+        Flights from {{ searchedOriginLabel() }}
+        <span class="muted">· {{ date() }}</span>
+      </h2>
+
+      @if (flights.length === 0) {
+        <p class="muted pad">No flights match. Try a different destination.</p>
+      } @else {
+        <p class="muted hint">Select a flight to book it.</p>
+        <table class="flight-table">
+          <thead>
+            <tr><th>Time</th><th>Flight</th><th>Airline</th><th>Destination</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (f of flights; track f.flightCode + f.time) {
+              <tr class="clickable" (click)="selectFlight(f)">
+                <td class="time">{{ f.time }}</td>
+                <td class="code">{{ f.flightCode }}</td>
+                <td>{{ f.airline }}</td>
+                <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
+                <td><span class="select-link">Select &rsaquo;</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+
+  <!-- Success -->
+  @if (booked(); as t) {
+    <section class="success confirm">
+      <h2>Ticket booked! 🎫</h2>
+      <p>
+        <strong>{{ t.originCity }} ({{ t.originCode }})</strong> →
+        <strong>{{ t.destinationCity }} ({{ t.destinationCode }})</strong>
+        on <strong>{{ t.date }}</strong> at <strong>{{ t.time }}</strong>.
+      </p>
+      <p class="muted">Passenger: {{ t.firstName }} {{ t.lastName }} · Ticket #{{ t.ticketId }}</p>
+      <a class="btn ghost" routerLink="/mytickets">View My Tickets</a>
+    </section>
+  }
+</main>
+
+<!-- Confirmation box -->
+@if (selectedFlight(); as f) {
+  <div class="modal-backdrop" (click)="dismissConfirm()">
+    <div class="confirm-box" (click)="$event.stopPropagation()">
+      <h3>Confirm your booking</h3>
+
+      <div class="route-block">
+        <div class="endpoint">
+          <span class="ep-code">{{ searchedOrigin() }}</span>
+          <span class="muted">Origin</span>
+        </div>
+        <div class="arrow">✈</div>
+        <div class="endpoint">
+          <span class="ep-code">{{ f.code }}</span>
+          <span class="muted">{{ f.city }}</span>
+        </div>
+      </div>
+
+      <dl class="facts">
+        <dt>Flight</dt><dd>{{ f.flightCode }} · {{ f.airline }}</dd>
+        <dt>Destination</dt><dd>{{ f.airport }}</dd>
+        <dt>Date</dt><dd>{{ date() }}</dd>
+        <dt>Time</dt><dd>{{ f.time }}</dd>
+        <dt>Passenger</dt><dd>{{ passengerName() }}</dd>
+      </dl>
+
+      @if (bookError()) { <p class="error">{{ bookError() }}</p> }
+
+      <div class="confirm-actions">
+        <button class="btn" [disabled]="booking()" (click)="confirmBooking()">
+          {{ booking() ? 'Booking…' : 'Confirm & Book' }}
+        </button>
+        <button class="btn ghost" [disabled]="booking()" (click)="dismissConfirm()">Back</button>
+      </div>
+    </div>
+  </div>
+}

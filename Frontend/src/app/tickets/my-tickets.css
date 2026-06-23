@@ -1,0 +1,98 @@
+.page-title { font-size: 26px; margin: 8px 0 20px; }
+
+.empty { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.empty .btn { text-decoration: none; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* Left list */
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 640px;
+  overflow-y: auto;
+}
+.ticket-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ticket-row:hover { border-color: #bfdbfe; }
+.ticket-row.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.ticket-row .route { font-weight: 700; font-size: 16px; }
+.ticket-row .when { font-size: 14px; }
+.small { font-size: 12px; }
+
+/* Right detail */
+.ticket-detail {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  padding: 24px 26px;
+  min-height: 240px;
+}
+.detail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+}
+.detail-head h2 { margin: 0; font-size: 22px; }
+.ticket-id { color: var(--muted); font-size: 14px; }
+
+.route-block {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.endpoint { display: flex; flex-direction: column; gap: 2px; }
+.ep-code { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+.ep-airport { font-size: 14px; font-weight: 600; }
+.arrow { font-size: 24px; color: var(--accent); }
+
+dl.facts { display: grid; grid-template-columns: 120px 1fr; gap: 10px 14px; margin: 0 0 22px; }
+dl.facts dt { color: var(--muted); font-size: 14px; }
+dl.facts dd { margin: 0; font-weight: 600; }
+
+/* Confirmation box */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.confirm-box {
+  background: #fff; border-radius: 14px; padding: 24px 26px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+}
+.confirm-box h3 { margin: 0 0 10px; font-size: 20px; }
+.confirm-box p { margin: 6px 0; }
+.confirm-actions { display: flex; gap: 12px; margin-top: 20px; }
+.confirm-actions .btn { flex: 1; }
+
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .ticket-list { max-height: none; flex-direction: row; flex-wrap: wrap; }
+  .ticket-row { flex: 1 1 200px; }
+}

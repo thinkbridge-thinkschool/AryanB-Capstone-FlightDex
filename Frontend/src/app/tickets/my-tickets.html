@@ -1,0 +1,83 @@
+<main class="container">
+  <h1 class="page-title">My Tickets</h1>
+
+  @if (loading()) {
+    <p class="muted">Loading your tickets…</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (items().length === 0) {
+    <div class="empty">
+      <p class="muted">You haven't booked any tickets yet.</p>
+      <a class="btn" routerLink="/book">Book a ticket</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <!-- Left: ticket list -->
+      <aside class="ticket-list">
+        @for (t of items(); track t.ticketId) {
+          <button class="ticket-row" [class.active]="selected()?.ticketId === t.ticketId"
+                  (click)="select(t)">
+            <span class="route">{{ t.originCode }} → {{ t.destinationCode }}</span>
+            <span class="when">{{ t.date }} · {{ t.time }}</span>
+            <span class="muted small">Ticket #{{ t.ticketId }}</span>
+          </button>
+        }
+      </aside>
+
+      <!-- Right: detail pane -->
+      <section class="ticket-detail">
+        @if (selected(); as t) {
+          <div class="detail-head">
+            <h2>{{ t.originCity }} → {{ t.destinationCity }}</h2>
+            <span class="ticket-id">Ticket #{{ t.ticketId }}</span>
+          </div>
+
+          <div class="route-block">
+            <div class="endpoint">
+              <span class="ep-code">{{ t.originCode }}</span>
+              <span class="ep-airport">{{ t.originAirport }}</span>
+              <span class="muted">{{ t.originCity }}</span>
+            </div>
+            <div class="arrow">✈</div>
+            <div class="endpoint">
+              <span class="ep-code">{{ t.destinationCode }}</span>
+              <span class="ep-airport">{{ t.destinationAirport }}</span>
+              <span class="muted">{{ t.destinationCity }}</span>
+            </div>
+          </div>
+
+          <dl class="facts">
+            <dt>Date</dt><dd>{{ t.date }}</dd>
+            <dt>Time</dt><dd>{{ t.time }}</dd>
+            <dt>Passenger</dt><dd>{{ t.firstName }} {{ t.lastName }}</dd>
+            <dt>Age</dt><dd>{{ t.age }}</dd>
+          </dl>
+
+          <button class="btn danger" (click)="askCancel()">Cancel ticket</button>
+        } @else {
+          <p class="muted">Select a ticket to see its details.</p>
+        }
+      </section>
+    </div>
+  }
+</main>
+
+<!-- Cancel confirmation box -->
+@if (confirming() && selected(); as t) {
+  <div class="modal-backdrop" (click)="dismissCancel()">
+    <div class="confirm-box" (click)="$event.stopPropagation()">
+      <h3>Cancel this ticket?</h3>
+      <p>
+        {{ t.originCity }} ({{ t.originCode }}) → {{ t.destinationCity }} ({{ t.destinationCode }})
+        on {{ t.date }} at {{ t.time }}.
+      </p>
+      <p class="muted">This cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn danger" [disabled]="cancelling()" (click)="confirmCancel()">
+          {{ cancelling() ? 'Cancelling…' : 'Yes, cancel' }}
+        </button>
+        <button class="btn ghost" [disabled]="cancelling()" (click)="dismissCancel()">Keep ticket</button>
+      </div>
+    </div>
+  </div>
+}
