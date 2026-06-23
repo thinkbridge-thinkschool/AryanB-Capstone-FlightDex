@@ -3,8 +3,9 @@ using FlightDex.Flights.Domain;
 namespace FlightDex.Flights.Application.Abstractions;
 
 /// <summary>
-/// The fully-resolved filter for a timetable query: direction, served airport, an optional
-/// counterpart term (code or city), an optional time window, and paging.
+/// The set of filters that shape a paged flight list. Built by the query handler and
+/// translated to SQL by the repository. All filters are optional except direction and
+/// paging; results are always sorted by <see cref="Flight.ScheduledTime"/> ascending.
 /// </summary>
 public sealed record FlightQuerySpec(
     FlightDirection Direction,

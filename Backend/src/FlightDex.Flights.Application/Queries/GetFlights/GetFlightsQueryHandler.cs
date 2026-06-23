@@ -5,12 +5,15 @@ using FlightDex.SharedKernel.Paging;
 
 namespace FlightDex.Flights.Application.Queries.GetFlights;
 
-internal sealed class GetFlightsQueryHandler(IFlightRepository flights)
+internal sealed class GetFlightsQueryHandler(IFlightRepository repository)
     : IQueryHandler<GetFlightsQuery, PagedResult<FlightListItem>>
 {
-    public Task<PagedResult<FlightListItem>> HandleAsync(GetFlightsQuery query, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<FlightListItem>> HandleAsync(
+        GetFlightsQuery query, CancellationToken cancellationToken = default)
     {
-        // TODO: return flights.QueryAsync(query.Spec, cancellationToken).
-        throw new NotImplementedException();
+        var page = await repository.GetPagedAsync(query.Spec, cancellationToken);
+
+        var items = page.Items.Select(FlightListItem.FromDomain).ToList();
+        return new PagedResult<FlightListItem>(items, page.Page, page.PageSize, page.TotalCount);
     }
 }

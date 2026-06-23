@@ -1,8 +1,10 @@
 namespace FlightDex.Flights.Domain;
 
-/// <summary>Whether a timetable row is a departure from, or an arrival at, the served airport.</summary>
+/// <summary>
+/// Whether a timetable row describes a flight leaving an airport or arriving at it.
+/// </summary>
 public enum FlightDirection
 {
-    Departure,
-    Arrival,
+    Departure = 0,
+    Arrival = 1,
 }
