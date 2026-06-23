@@ -9,3 +9,5 @@
     - Day 26 Piece 1 - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/tree/D26P1---AppInsights-KQL
     - Day 27 Piece 1 - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/tree/D27P1---SecurityPass
     - Day 28 Piece 1 - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/tree/D28P1---DesignReview_ADR
+- Solutions from Day 29:
+    - Day 29 Piece 1 - [Documentation/Solutions/D29P1_Solution.md](Documentation/Solutions/D29P1_Solution.md)
