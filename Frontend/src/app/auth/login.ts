@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { httpErrorMessage } from '../shared/http-errors';
 
 type Mode = 'login' | 'register';
 
@@ -122,12 +123,11 @@ export class Login {
   }
 
   private messageFor(err: HttpErrorResponse): string {
-    if (err.status === 0) return 'Could not reach the server. Is the API running on :5162?';
-    // ASP.NET ProblemDetails carries a human-readable "detail".
-    const detail = err.error?.detail ?? err.error?.title;
-    if (typeof detail === 'string' && detail) return detail;
-    if (err.status === 401) return 'Invalid email or password.';
-    if (err.status === 409) return 'An account with that email already exists.';
-    return 'Something went wrong. Please try again.';
+    // Status-specific fallback, used only when the server sent no ProblemDetails detail.
+    const fallback =
+      err.status === 401 ? 'Invalid email or password.'
+      : err.status === 409 ? 'An account with that email already exists.'
+      : 'Something went wrong. Please try again.';
+    return httpErrorMessage(err, fallback);
   }
 }

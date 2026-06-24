@@ -5,8 +5,10 @@ import {
   ALL_AIRPORT_ALIASES, Airport, FlightDetail, FlightListItem,
   PagedResult, airportCity, airportFullName, airportLabel, resolveAirport,
 } from '../flight.models';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Autocomplete } from '../shared/autocomplete';
 import { ShowPickerDirective } from '../shared/show-picker.directive';
+import { httpErrorMessage } from '../shared/http-errors';
 
 /** Which result box(es) are shown. */
 type View = 'both' | 'departures' | 'arrivals';
@@ -148,8 +150,9 @@ export class Timetable {
     this.flights.getDepartures(this.at(), this.departTo(), range, this.departures().page, PAGE_SIZE)
       .subscribe({
         next: r => this.departures.update(b => ({ ...b, result: r, loading: false })),
-        error: () => this.departures.update(b => ({
-          ...b, result: null, loading: false, error: 'Could not load departures (is the API on :5162?).',
+        error: (err: HttpErrorResponse) => this.departures.update(b => ({
+          ...b, result: null, loading: false,
+          error: httpErrorMessage(err, 'Could not load departures. Please try again.'),
         })),
       });
   }
@@ -160,8 +163,9 @@ export class Timetable {
     this.flights.getArrivals(this.at(), this.arriveFrom(), range, this.arrivals().page, PAGE_SIZE)
       .subscribe({
         next: r => this.arrivals.update(b => ({ ...b, result: r, loading: false })),
-        error: () => this.arrivals.update(b => ({
-          ...b, result: null, loading: false, error: 'Could not load arrivals (is the API on :5162?).',
+        error: (err: HttpErrorResponse) => this.arrivals.update(b => ({
+          ...b, result: null, loading: false,
+          error: httpErrorMessage(err, 'Could not load arrivals. Please try again.'),
         })),
       });
   }
