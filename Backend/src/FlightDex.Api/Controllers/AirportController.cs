@@ -9,8 +9,7 @@ public sealed class AirportController(IAirportSuggestionCache cache) : Controlle
 {
     /// <summary>
     /// Type-ahead suggestions — every unique airport code, airport name and city —
-    /// served entirely from the Redis cache. The main database is not touched here;
-    /// only the actual flight search (GET /flight) queries it.
+    /// served from the Locations lookup table rather than scanning the Flights table.
     /// </summary>
     [HttpGet("suggestions")]
     [ProducesResponseType(StatusCodes.Status200OK)]

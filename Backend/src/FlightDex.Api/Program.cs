@@ -61,20 +61,20 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Create each module's SQLite schema from its model (no migrations) and seed the timetable.
+// Apply each module's migrations to bring its SQLite database up to date, then seed.
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var flightsDb = scope.ServiceProvider.GetRequiredService<FlightsDbContext>();
-    await flightsDb.Database.EnsureCreatedAsync();
+    await flightsDb.Database.MigrateAsync();
 
     var bookingDb = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
-    await bookingDb.Database.EnsureCreatedAsync();
+    await bookingDb.Database.MigrateAsync();
 
     var seeder = scope.ServiceProvider.GetRequiredService<FlightTimetableSeeder>();
     await seeder.SeedAsync();
 
-    // Extract unique airport codes/names/cities from the timetable into the Redis
-    // suggestion cache. Search type-aheads read from this cache, never the database.
+    // Extract unique airport codes/names/cities from the timetable into the Locations
+    // table. Search type-aheads read from that table, not the full Flights table.
     var cacheBuilder = scope.ServiceProvider.GetRequiredService<AirportSuggestionCacheBuilder>();
     await cacheBuilder.RebuildAsync();
 }

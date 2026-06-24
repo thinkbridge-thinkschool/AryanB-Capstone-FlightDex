@@ -13,7 +13,8 @@ internal sealed class GetFlightsQueryHandler(IFlightRepository repository)
     {
         var page = await repository.GetPagedAsync(query.Spec, cancellationToken);
 
-        var items = page.Items.Select(FlightListItem.FromDomain).ToList();
-        return new PagedResult<FlightListItem>(items, page.Page, page.PageSize, page.TotalCount);
+        return new PagedResult<FlightListItem>(
+            page.Items.Select(FlightListItem.FromDomain).ToList(),
+            page.Page, page.PageSize, page.TotalCount);
     }
 }

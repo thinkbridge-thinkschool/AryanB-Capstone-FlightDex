@@ -1,7 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TicketService } from './ticket.service';
 import { Ticket } from './ticket.models';
+import { httpErrorMessage } from '../shared/http-errors';
 
 @Component({
   selector: 'app-my-tickets',
@@ -38,9 +40,9 @@ export class MyTickets {
         this.selected.set(stillThere ?? list[0] ?? null);
         this.loading.set(false);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.error.set('Could not load your tickets (is the API on :5162?).');
+        this.error.set(httpErrorMessage(err, 'Could not load your tickets. Please try again.'));
       },
     });
   }
@@ -69,10 +71,10 @@ export class MyTickets {
         this.selected.set(null);
         this.load();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.cancelling.set(false);
         this.confirming.set(false);
-        this.error.set('Could not cancel the ticket. Please try again.');
+        this.error.set(httpErrorMessage(err, 'Could not cancel the ticket. Please try again.'));
       },
     });
   }

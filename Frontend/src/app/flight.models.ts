@@ -37,7 +37,6 @@ export interface PagedResult<T> {
 }
 
 export type Airport = 'BOM' | 'BLR' | 'PNQ' | 'LON' | 'DBX';
-export const AIRPORTS: Airport[] = ['BOM', 'BLR', 'PNQ', 'LON', 'DBX'];
 
 export interface AirportInfo {
   code: Airport;

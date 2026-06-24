@@ -11,6 +11,7 @@ import { TicketService } from '../tickets/ticket.service';
 import { Ticket } from '../tickets/ticket.models';
 import { Autocomplete } from '../shared/autocomplete';
 import { ShowPickerDirective } from '../shared/show-picker.directive';
+import { httpErrorMessage } from '../shared/http-errors';
 
 @Component({
   selector: 'app-book-tickets',
@@ -35,7 +36,7 @@ export class BookTickets {
 
   // "From" only allows the 5 served airports — kept in code (code/name/city aliases).
   readonly originSuggestions = ALL_AIRPORT_ALIASES;
-  // "To" can be any airport — loaded once from the Redis-backed cache.
+  // "To" can be any airport — loaded once from the Locations suggestion endpoint.
   readonly destinationSuggestions = signal<string[]>([]);
 
   constructor() {
@@ -97,9 +98,9 @@ export class BookTickets {
         this.results.set(page.items);
         this.searching.set(false);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.searching.set(false);
-        this.searchError.set('Could not load flights (is the API on :5162?).');
+        this.searchError.set(httpErrorMessage(err, 'Could not load flights. Please try again.'));
       },
     });
   }
@@ -139,9 +140,7 @@ export class BookTickets {
       },
       error: (err: HttpErrorResponse) => {
         this.booking.set(false);
-        this.bookError.set(err.status === 0
-          ? 'Could not reach the server. Is the API running on :5162?'
-          : (err.error?.detail ?? 'Could not book the ticket. Please try again.'));
+        this.bookError.set(httpErrorMessage(err, 'Could not book the ticket. Please try again.'));
       },
     });
   }

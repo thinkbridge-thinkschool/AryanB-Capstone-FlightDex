@@ -11,6 +11,9 @@ public sealed class FlightsDbContext(DbContextOptions<FlightsDbContext> options)
 {
     public DbSet<Flight> Flights => Set<Flight>();
 
+    /// <summary>Search suggestions (codes, airport names, cities) rebuilt from the timetable.</summary>
+    public DbSet<Location> Locations => Set<Location>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FlightsDbContext).Assembly);
