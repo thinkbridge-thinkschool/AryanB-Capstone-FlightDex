@@ -16,10 +16,10 @@ Use Claude's code review agent to perform code-review. Also, asked claude to add
 ## My Actions:
 PR | Action | Reason
 ---|---|---
+PR #1 refactor(UI): Improved frontend — remove dead code, share HTTP-error & modal styling | Accepted | A lot of dead code was removed and improvements were usefull. 
+PR #2 refactor(api): Improved airport suggestion cache — replace Redis with a Locations table | Accepted | Redis on Azure costs a lot. A smaller schema was a acceptable solution.
+PR #3 refactor(backend): Improved Migrations — EF Core migrations instead of EnsureCreated | Accepted | This is a great fix and required improvement. EF Core Migrations are better than EnsureCreatedAsync().
 PR #4 feat: Added a feature to update tickets | Rejected | The code and implementation is working and correct. Although I am rejecting this PR, since this is not a required feature. Usually the user will cancel his last flight's ticket and then book a new one. Mostly such a feature is not provided by any major Airlines or Flight Ticket Booking Websites.
-refactor(backend): Improved Migrations — EF Core migrations instead of EnsureCreated | Accepted | This is a great fix and required improvement. EF Core Migrations are better than EnsureCreatedAsync().
-refactor(api): Improved airport suggestion cache — replace Redis with a Locations table | Accepted | Redis on Azure costs a lot. A smaller schema was a acceptable solution.
-refactor(UI): Improved frontend — remove dead code, share HTTP-error & modal styling | Accepted | A lot of dead code was removed and improvements were usefull. 
 
 ## PR Threads
 
