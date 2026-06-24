@@ -2,7 +2,7 @@ namespace FlightDex.Flights.Domain;
 
 /// <summary>
 /// A single recurring (daily) timetable entry for one of the served airports
-/// (BLR, BOM, PNQ). The model unifies departures and arrivals: <see cref="Direction"/>
+/// (BLR, BOM, PNQ, LON, DBX). The model unifies departures and arrivals: <see cref="Direction"/>
 /// says which it is, and the "Counterpart" fields describe the <em>other</em> end of
 /// the leg — the destination for a departure, the origin for an arrival.
 /// </summary>
@@ -10,7 +10,7 @@ public sealed class Flight
 {
     public int Id { get; private set; }
 
-    /// <summary>The served airport this row belongs to: BLR, BOM or PNQ.</summary>
+    /// <summary>The served airport this row belongs to: BLR, BOM, PNQ, LON or DBX.</summary>
     public string Airport { get; private set; } = string.Empty;
 
     public FlightDirection Direction { get; private set; }

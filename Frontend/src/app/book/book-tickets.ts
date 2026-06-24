@@ -9,10 +9,12 @@ import {
 import { AuthService } from '../auth/auth.service';
 import { TicketService } from '../tickets/ticket.service';
 import { Ticket } from '../tickets/ticket.models';
+import { Autocomplete } from '../shared/autocomplete';
+import { ShowPickerDirective } from '../shared/show-picker.directive';
 
 @Component({
   selector: 'app-book-tickets',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, Autocomplete, ShowPickerDirective],
   templateUrl: './book-tickets.html',
   styleUrl: './book-tickets.css',
 })
@@ -26,11 +28,22 @@ export class BookTickets {
   // Search boxes (free text, resolved against the served airports / timetable).
   readonly from = signal('');
   readonly to = signal('');
-  readonly date = signal(this.today);
+  readonly date = signal('');
 
-  // Suggestions for the search-box datalists.
+  // The date input swaps text<->date so the custom placeholder shows when empty.
+  readonly dateType = signal<'text' | 'date'>('text');
+
+  // "From" only allows the 5 served airports — kept in code (code/name/city aliases).
   readonly originSuggestions = ALL_AIRPORT_ALIASES;
+  // "To" can be any airport — loaded once from the Redis-backed cache.
   readonly destinationSuggestions = signal<string[]>([]);
+
+  constructor() {
+    this.flights.getAirportSuggestions().subscribe({
+      next: list => this.destinationSuggestions.set(list),
+      error: () => { /* leave suggestions empty if the cache is unavailable */ },
+    });
+  }
 
   // Flight list (results of a search).
   readonly results = signal<FlightListItem[] | null>(null);
@@ -54,21 +67,9 @@ export class BookTickets {
     return u ? `${u.firstName} ${u.lastName}` : '';
   });
 
-  /** As the origin is typed, load that airport's destinations for the "To" suggestions. */
-  onFromChange(value: string): void {
-    this.from.set(value);
-    const origin = resolveAirport(value);
-    if (!origin) {
-      this.destinationSuggestions.set([]);
-      return;
-    }
-    this.flights.getDepartures(origin, '', {}, 1, 100).subscribe({
-      next: page => {
-        const cities = [...new Set(page.items.map(f => f.city))].sort((a, b) => a.localeCompare(b));
-        this.destinationSuggestions.set(cities);
-      },
-      error: () => this.destinationSuggestions.set([]),
-    });
+  /** When the date field loses focus while empty, revert to text so the placeholder shows. */
+  onDateBlur(): void {
+    if (!this.date()) this.dateType.set('text');
   }
 
   search(): void {
@@ -77,7 +78,7 @@ export class BookTickets {
 
     const origin = resolveAirport(this.from());
     if (!origin) {
-      this.searchError.set('Origin must be a served airport: BLR, BOM or PNQ (or its city).');
+      this.searchError.set('Origin must be a served airport: BLR, BOM, PNQ, LON or DBX (or its city).');
       this.results.set(null);
       return;
     }

@@ -44,6 +44,14 @@ export class FlightService {
     return this.http.get<PagedResult<FlightListItem>>(`${API_BASE_URL}/flight`, { params });
   }
 
+  /**
+   * Airport search suggestions (codes, airport names and cities) served from the Redis
+   * cache. Does not touch the timetable database — only the actual search does.
+   */
+  getAirportSuggestions(): Observable<string[]> {
+    return this.http.get<string[]>(`${API_BASE_URL}/airports/suggestions`);
+  }
+
   /** Full details for a flight code (returns one record, or the first if several match). */
   getDetail(flightCode: string): Observable<FlightDetail> {
     return this.http

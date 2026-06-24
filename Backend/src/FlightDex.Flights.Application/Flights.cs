@@ -4,7 +4,7 @@ namespace FlightDex.Flights.Application;
 public static class ServedAirports
 {
     public static readonly IReadOnlySet<string> All =
-        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BLR", "BOM", "PNQ" };
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "BLR", "BOM", "PNQ", "LON", "DBX" };
 
     public static bool IsServed(string? code) => code is not null && All.Contains(code);
 }

@@ -1,15 +1,17 @@
-# Source timetable exports (kept out of version control per project setup)
-Local
-
 # .NET build output
 [Bb]in/
 [Oo]bj/
 *.user
 
+# Local SQLite databases (created/seeded at runtime)
+*.db
+*.db-shm
+*.db-wal
+
 # Angular / Node
-client/node_modules/
-client/dist/
-client/.angular/
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.angular/
 
 # Generated migration script artifact (regenerate with dotnet ef)
 artifacts/
@@ -21,3 +23,7 @@ artifacts/
 *.suo
 Thumbs.db
 .DS_Store
+
+#Claude
+Claude
+.claude

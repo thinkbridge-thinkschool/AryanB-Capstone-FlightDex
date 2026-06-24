@@ -2,9 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FlightService, TimeRange } from '../flight.service';
 import {
-  AIRPORT_INFO, ALL_AIRPORT_ALIASES, Airport, FlightDetail, FlightListItem,
-  PagedResult, airportLabel, resolveAirport,
+  ALL_AIRPORT_ALIASES, Airport, FlightDetail, FlightListItem,
+  PagedResult, airportCity, airportFullName, airportLabel, resolveAirport,
 } from '../flight.models';
+import { Autocomplete } from '../shared/autocomplete';
+import { ShowPickerDirective } from '../shared/show-picker.directive';
 
 /** Which result box(es) are shown. */
 type View = 'both' | 'departures' | 'arrivals';
@@ -23,15 +25,21 @@ const emptyBox = (): BoxState => ({ result: null, page: 1, loading: false, error
 
 @Component({
   selector: 'app-timetable',
-  imports: [FormsModule],
+  imports: [FormsModule, Autocomplete, ShowPickerDirective],
   templateUrl: './timetable.html',
   styleUrl: './timetable.css',
 })
 export class Timetable {
   private readonly flights = inject(FlightService);
 
-  readonly airportInfo = AIRPORT_INFO;
+  /** Served-airport suggestions (code/name/city) for the "currently at" box — kept in code. */
   readonly aliasSuggestions = ALL_AIRPORT_ALIASES;
+  /** Counterpart (any-airport) suggestions for the search boxes — from the Redis-backed cache. */
+  readonly suggestions = signal<string[]>([]);
+
+  /** Exposed for the detail modal. */
+  readonly airportFullName = airportFullName;
+  readonly airportCity = airportCity;
 
   // "You are currently at" search box. Default airport: Pune (PNQ).
   readonly airportSearch = signal('');
@@ -72,14 +80,24 @@ export class Timetable {
   constructor() {
     this.loadDepartures();
     this.loadArrivals();
+    this.flights.getAirportSuggestions().subscribe({
+      next: list => this.suggestions.set(list),
+      error: () => { /* leave suggestions empty if the cache is unavailable */ },
+    });
   }
 
   // ---- Airport selection ------------------------------------------------
 
+  /** Picked from the "currently at" suggestion list or via Enter. */
+  onAirportSelected(value: string): void {
+    this.airportSearch.set(value);
+    this.applyAirportSearch();
+  }
+
   applyAirportSearch(): void {
     const code = resolveAirport(this.airportSearch());
     if (!code) {
-      this.airportError.set('Try a code (BOM/BLR/PNQ), city, or airport name.');
+      this.airportError.set('Try a code (BOM/BLR/PNQ/LON/DBX), city, or airport name.');
       return;
     }
     this.airportError.set(null);

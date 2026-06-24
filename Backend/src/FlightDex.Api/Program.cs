@@ -5,6 +5,7 @@ using FlightDex.Booking.Infrastructure.Persistence;
 using FlightDex.Booking.Infrastructure.Security;
 using FlightDex.Flights.Application;
 using FlightDex.Flights.Infrastructure;
+using FlightDex.Flights.Infrastructure.Caching;
 using FlightDex.Flights.Infrastructure.Persistence;
 using FlightDex.Flights.Infrastructure.Persistence.Seeding;
 using System.Text.Json.Serialization;
@@ -71,6 +72,11 @@ await using (var scope = app.Services.CreateAsyncScope())
 
     var seeder = scope.ServiceProvider.GetRequiredService<FlightTimetableSeeder>();
     await seeder.SeedAsync();
+
+    // Extract unique airport codes/names/cities from the timetable into the Redis
+    // suggestion cache. Search type-aheads read from this cache, never the database.
+    var cacheBuilder = scope.ServiceProvider.GetRequiredService<AirportSuggestionCacheBuilder>();
+    await cacheBuilder.RebuildAsync();
 }
 
 if (app.Environment.IsDevelopment())

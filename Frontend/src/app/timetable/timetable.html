@@ -1,16 +1,11 @@
 <!-- "You are currently at" bar -->
 <section class="at-bar">
   <label for="at">You are currently at:</label>
-  <input id="at" list="airport-aliases" placeholder="Enter City, Airport Name or Code"
-         [ngModel]="airportSearch()" (ngModelChange)="airportSearch.set($event)"
-         (change)="applyAirportSearch()" (keyup.enter)="applyAirportSearch()" />
+  <app-autocomplete class="at-input" inputId="at" placeholder="Enter City, Airport Name or Code"
+                    [value]="airportSearch()" [suggestions]="aliasSuggestions" [limit]="aliasSuggestions.length"
+                    (valueChange)="airportSearch.set($event)"
+                    (selected)="onAirportSelected($event)" />
   <span class="current-at">{{ at() }} &middot; {{ currentAirportLabel() }}</span>
-
-  <datalist id="airport-aliases">
-    @for (alias of aliasSuggestions; track alias) {
-      <option [value]="alias"></option>
-    }
-  </datalist>
 </section>
 
 <!-- Long search bar -->
@@ -20,14 +15,16 @@
   <form class="search-fields" (ngSubmit)="doSearch()">
     <div class="field">
       <label for="arriveFrom">Arriving From:</label>
-      <input id="arriveFrom" type="text" name="arriveFrom" placeholder="Enter Origin Airport"
-             [ngModel]="arriveFrom()" (ngModelChange)="arriveFrom.set($event)" />
+      <app-autocomplete class="field-input" inputId="arriveFrom" placeholder="Enter Origin Airport"
+                        [value]="arriveFrom()" [suggestions]="suggestions()"
+                        (valueChange)="arriveFrom.set($event)" />
     </div>
 
     <div class="field">
       <label for="departTo">Departing To:</label>
-      <input id="departTo" type="text" name="departTo" placeholder="Enter Destination Airport"
-             [ngModel]="departTo()" (ngModelChange)="departTo.set($event)" />
+      <app-autocomplete class="field-input" inputId="departTo" placeholder="Enter Destination Airport"
+                        [value]="departTo()" [suggestions]="suggestions()"
+                        (valueChange)="departTo.set($event)" />
     </div>
 
     <button type="button" class="more-toggle" (click)="toggleMoreOptions()" [class.open]="moreOptions()">
@@ -42,15 +39,15 @@
   <section class="more-panel">
     <div class="more-row">
       <span class="row-label">Departing between:</span>
-      <input type="time" [ngModel]="deptAfter()" (ngModelChange)="deptAfter.set($event)" />
+      <input type="time" appShowPicker [ngModel]="deptAfter()" (ngModelChange)="deptAfter.set($event)" />
       <span class="and">and</span>
-      <input type="time" [ngModel]="deptBefore()" (ngModelChange)="deptBefore.set($event)" />
+      <input type="time" appShowPicker [ngModel]="deptBefore()" (ngModelChange)="deptBefore.set($event)" />
     </div>
     <div class="more-row">
       <span class="row-label">Arriving between:</span>
-      <input type="time" [ngModel]="arrAfter()" (ngModelChange)="arrAfter.set($event)" />
+      <input type="time" appShowPicker [ngModel]="arrAfter()" (ngModelChange)="arrAfter.set($event)" />
       <span class="and">and</span>
-      <input type="time" [ngModel]="arrBefore()" (ngModelChange)="arrBefore.set($event)" />
+      <input type="time" appShowPicker [ngModel]="arrBefore()" (ngModelChange)="arrBefore.set($event)" />
     </div>
     <button type="button" class="btn" (click)="doSearch()">Apply</button>
   </section>
@@ -165,24 +162,46 @@
 <!-- Flight detail modal -->
 @if (detailLoading() || selected()) {
   <div class="modal-backdrop" (click)="closeDetail()">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal detail-modal" (click)="$event.stopPropagation()">
       @if (detailLoading()) {
         <p class="muted">Loading details&hellip;</p>
       } @else if (selected(); as d) {
-        <div class="modal-head">
-          <h3>{{ d.flightCode }}</h3>
-          <button class="close" (click)="closeDetail()" aria-label="Close">&times;</button>
+        <button class="close detail-close" (click)="closeDetail()" aria-label="Close">&times;</button>
+
+        <!-- Direction banner: green for arrival, blue for departure -->
+        <div class="dir-banner" [class.arr]="d.direction === 'Arrival'">{{ d.direction }}</div>
+
+        <div class="entries">
+          <!-- Entry 1: Flight -->
+          <section class="entry">
+            <h4 class="entry-head">Flight</h4>
+            <div class="sub"><span class="sub-label">Airlines:</span> <span class="sub-data">{{ d.airline }}</span></div>
+            <div class="sub"><span class="sub-label">Flight Code:</span> <span class="sub-data">{{ d.flightCode }}</span></div>
+            <div class="sub"><span class="sub-label">Airline Code:</span> <span class="sub-data">{{ d.airlineCode }}</span></div>
+          </section>
+
+          <!-- Entry 2: the served (current) airport -->
+          <section class="entry">
+            <h4 class="entry-head">{{ d.direction === 'Departure' ? 'Departure From' : 'Arrival At' }}</h4>
+            <div class="sub"><span class="sub-label">Airport Code:</span> <span class="sub-data">{{ d.airport }}</span></div>
+            <div class="sub"><span class="sub-label">Airport Name:</span> <span class="sub-data">{{ airportFullName(d.airport) }}</span></div>
+            <div class="sub"><span class="sub-label">City:</span> <span class="sub-data">{{ airportCity(d.airport) }}</span></div>
+          </section>
+
+          <!-- Entry 3: the counterpart (destination for a departure, origin for an arrival) -->
+          <section class="entry">
+            <h4 class="entry-head">{{ d.direction === 'Departure' ? 'Destination' : 'Origin' }}</h4>
+            <div class="sub"><span class="sub-label">Airport Code:</span> <span class="sub-data">{{ d.counterpartCode }}</span></div>
+            <div class="sub"><span class="sub-label">Airport Name:</span> <span class="sub-data">{{ d.counterpartAirport }}</span></div>
+            <div class="sub"><span class="sub-label">City:</span> <span class="sub-data">{{ d.counterpartCity }}</span></div>
+          </section>
+
+          <!-- Entry 4: Duration -->
+          <section class="entry">
+            <h4 class="entry-head">Duration</h4>
+            <div class="sub"><span class="sub-data">{{ d.duration }}</span></div>
+          </section>
         </div>
-        <span class="badge" [class.arr]="d.direction === 'Arrival'">
-          {{ d.direction }} &middot; {{ d.airport }}
-        </span>
-        <dl class="detail">
-          <dt>Airline</dt><dd>{{ d.airline }} ({{ d.airlineCode }})</dd>
-          <dt>{{ d.direction === 'Departure' ? 'Departs' : 'Arrives' }}</dt><dd>{{ d.time }}</dd>
-          <dt>{{ d.direction === 'Departure' ? 'Destination' : 'Origin' }}</dt>
-          <dd>{{ d.counterpartCity }} &mdash; {{ d.counterpartAirport }} ({{ d.counterpartCode }})</dd>
-          <dt>Duration</dt><dd>{{ d.duration }}</dd>
-        </dl>
       }
     </div>
   </div>

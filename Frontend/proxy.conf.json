@@ -4,6 +4,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/airports": {
+    "target": "http://localhost:5162",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/auth": {
     "target": "http://localhost:5162",
     "secure": false,

@@ -44,7 +44,7 @@ public sealed class FlightController(IQueryDispatcher dispatcher) : ControllerBa
         CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(at) && !ServedAirports.IsServed(at))
-            return Problem($"'at' must be one of BLR, BOM or PNQ.", statusCode: StatusCodes.Status400BadRequest);
+            return Problem($"'at' must be one of {string.Join(", ", ServedAirports.All)}.", statusCode: StatusCodes.Status400BadRequest);
 
         // Presence of the key (even without a value) selects the direction.
         var hasFrom = Request.Query.ContainsKey("from");

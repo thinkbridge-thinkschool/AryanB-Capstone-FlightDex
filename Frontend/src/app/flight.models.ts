@@ -36,8 +36,8 @@ export interface PagedResult<T> {
   hasNext: boolean;
 }
 
-export type Airport = 'BOM' | 'BLR' | 'PNQ';
-export const AIRPORTS: Airport[] = ['BOM', 'BLR', 'PNQ'];
+export type Airport = 'BOM' | 'BLR' | 'PNQ' | 'LON' | 'DBX';
+export const AIRPORTS: Airport[] = ['BOM', 'BLR', 'PNQ', 'LON', 'DBX'];
 
 export interface AirportInfo {
   code: Airport;
@@ -66,11 +66,28 @@ export const AIRPORT_INFO: AirportInfo[] = [
     city: 'Pune',
     aliases: ['PNQ', 'Pune', 'Pune International Airport'],
   },
+  {
+    code: 'LON',
+    fullName: 'London Heathrow Airport',
+    city: 'London',
+    aliases: ['LON', 'LHR', 'London', 'Heathrow', 'London Heathrow Airport'],
+  },
+  {
+    code: 'DBX',
+    fullName: 'Dubai International Airport',
+    city: 'Dubai',
+    aliases: ['DBX', 'DXB', 'Dubai', 'Dubai International Airport'],
+  },
 ];
 
 /** Full airport name for a code, e.g. BOM -> "Chhatrapati Shivaji Maharaj International Airport". */
-export function airportFullName(code: Airport): string {
+export function airportFullName(code: string): string {
   return AIRPORT_INFO.find(a => a.code === code)?.fullName ?? code;
+}
+
+/** City for an airport code, e.g. LON -> "London". Empty string if unknown. */
+export function airportCity(code: string): string {
+  return AIRPORT_INFO.find(a => a.code === code)?.city ?? '';
 }
 
 /** Full name + city, e.g. PNQ -> "Pune International Airport, Pune". */
@@ -87,5 +104,5 @@ export function resolveAirport(term: string): Airport | null {
   return match?.code ?? null;
 }
 
-/** Every alias across all airports — handy for an autocomplete datalist. */
+/** Every alias across all airports — feeds the served-airport autocomplete fields. */
 export const ALL_AIRPORT_ALIASES: string[] = AIRPORT_INFO.flatMap(a => a.aliases);

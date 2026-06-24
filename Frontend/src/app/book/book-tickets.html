@@ -5,32 +5,28 @@
     <span class="search-heading">Search</span>
 
     <form class="book-form" (ngSubmit)="search()">
-      <!-- From (search box) -->
+      <!-- From (search box with suggestions below) -->
       <div class="form-group">
         <label class="field-label" for="from">From</label>
-        <input id="from" class="input" name="from" list="origin-list" autocomplete="off"
-               placeholder="Select your origin airport (BLR, BOM or PNQ)"
-               [ngModel]="from()" (ngModelChange)="onFromChange($event)" />
-        <datalist id="origin-list">
-          @for (a of originSuggestions; track a) { <option [value]="a"></option> }
-        </datalist>
+        <app-autocomplete inputId="from" placeholder="Select your Origin Airport"
+                          [value]="from()" [suggestions]="originSuggestions" [limit]="originSuggestions.length"
+                          (valueChange)="from.set($event)" />
       </div>
 
-      <!-- To (search box) -->
+      <!-- To (search box with suggestions below) -->
       <div class="form-group">
         <label class="field-label" for="to">To</label>
-        <input id="to" class="input" name="to" list="dest-list" autocomplete="off"
-               placeholder="Select destination (city or code) — leave blank for all"
-               [ngModel]="to()" (ngModelChange)="to.set($event)" />
-        <datalist id="dest-list">
-          @for (d of destinationSuggestions(); track d) { <option [value]="d"></option> }
-        </datalist>
+        <app-autocomplete inputId="to" placeholder="Select your Destination Airport"
+                          [value]="to()" [suggestions]="destinationSuggestions()"
+                          (valueChange)="to.set($event)" />
       </div>
 
-      <!-- Date -->
+      <!-- Date — opens the calendar on click; accepts a typed date too -->
       <div class="form-group">
         <label class="field-label" for="date">Date</label>
-        <input id="date" class="input" type="date" name="date" [min]="today"
+        <input id="date" class="input" name="date" appShowPicker
+               [type]="dateType()" placeholder="Select Date of Journey" [min]="today"
+               (focus)="dateType.set('date')" (blur)="onDateBlur()"
                [ngModel]="date()" (ngModelChange)="date.set($event)" />
       </div>
 
