@@ -73,8 +73,8 @@ await using (var scope = app.Services.CreateAsyncScope())
     var seeder = scope.ServiceProvider.GetRequiredService<FlightTimetableSeeder>();
     await seeder.SeedAsync();
 
-    // Extract unique airport codes/names/cities from the timetable into the Redis
-    // suggestion cache. Search type-aheads read from this cache, never the database.
+    // Extract unique airport codes/names/cities from the timetable into the Locations
+    // table. Search type-aheads read from that table, not the full Flights table.
     var cacheBuilder = scope.ServiceProvider.GetRequiredService<AirportSuggestionCacheBuilder>();
     await cacheBuilder.RebuildAsync();
 }
