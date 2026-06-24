@@ -2,6 +2,7 @@ using System.Globalization;
 using FlightDex.Api.Contracts;
 using FlightDex.Booking.Application.Commands.BookTicket;
 using FlightDex.Booking.Application.Commands.CancelTicket;
+using FlightDex.Booking.Application.Commands.UpdateTicket;
 using FlightDex.Booking.Application.Dtos;
 using FlightDex.Booking.Application.Queries.GetMyTickets;
 using FlightDex.SharedKernel.Cqrs;
@@ -57,6 +58,26 @@ public sealed class TicketController(
     {
         var tickets = await queries.DispatchAsync(new GetMyTicketsQuery(User.GetUserId()), cancellationToken);
         return Ok(tickets);
+    }
+
+    /// <summary>Reschedules one of the signed-in user's tickets to a new date and time.</summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(TicketDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateTicketRequest request, CancellationToken cancellationToken)
+    {
+        if (!DateOnly.TryParseExact(request.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            return Problem("Date must be 'yyyy-MM-dd'.", statusCode: StatusCodes.Status400BadRequest);
+
+        if (!TimeOnly.TryParseExact(request.Time, ["HH\\:mm", "HH\\:mm\\:ss"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+            return Problem("Time must be 'HH:mm'.", statusCode: StatusCodes.Status400BadRequest);
+
+        var updated = await commands.DispatchAsync(
+            new UpdateTicketCommand(User.GetUserId(), id, date, time), cancellationToken);
+
+        return updated is null ? NotFound() : Ok(updated);
     }
 
     /// <summary>Cancels one of the signed-in user's tickets.</summary>

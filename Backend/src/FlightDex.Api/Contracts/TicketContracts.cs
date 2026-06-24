@@ -12,3 +12,9 @@ public sealed record BookTicketRequest(
     string Time,
     AirportRef Origin,
     AirportRef Destination);
+
+/// <summary>
+/// Reschedule payload. Date is "yyyy-MM-dd", Time is "HH:mm". Only the travel date and
+/// time can change; the route and passenger stay as booked.
+/// </summary>
+public sealed record UpdateTicketRequest(string Date, string Time);

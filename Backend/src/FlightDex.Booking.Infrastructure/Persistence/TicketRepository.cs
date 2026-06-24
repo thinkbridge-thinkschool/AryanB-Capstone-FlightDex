@@ -22,6 +22,13 @@ internal sealed class TicketRepository(BookingDbContext dbContext) : ITicketRepo
     public Task<Ticket?> GetByIdAsync(int id, CancellationToken cancellationToken = default) =>
         dbContext.Tickets.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
+    public async Task UpdateAsync(Ticket ticket, CancellationToken cancellationToken = default)
+    {
+        // The ticket comes from GetByIdAsync (tracked), so saving flushes its changes.
+        dbContext.Tickets.Update(ticket);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task RemoveAsync(Ticket ticket, CancellationToken cancellationToken = default)
     {
         dbContext.Tickets.Remove(ticket);

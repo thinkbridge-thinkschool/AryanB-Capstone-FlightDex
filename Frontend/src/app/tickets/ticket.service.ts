@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BookTicketRequest, Ticket } from './ticket.models';
+import { BookTicketRequest, Ticket, UpdateTicketRequest } from './ticket.models';
 
 /**
  * Booking, listing and cancelling tickets. Every call needs the bearer token, which the
@@ -17,6 +17,11 @@ export class TicketService {
 
   getMine(): Observable<Ticket[]> {
     return this.http.get<Ticket[]>('/ticket');
+  }
+
+  /** Reschedules a ticket to a new date/time and returns the updated ticket. */
+  update(ticketId: number, request: UpdateTicketRequest): Observable<Ticket> {
+    return this.http.put<Ticket>(`/ticket/${ticketId}`, request);
   }
 
   cancel(ticketId: number): Observable<void> {

@@ -11,8 +11,11 @@ public interface ITicketRepository
     /// <summary>A user's tickets, most recent first.</summary>
     Task<IReadOnlyList<Ticket>> GetByUserAsync(int userId, CancellationToken cancellationToken = default);
 
-    /// <summary>One ticket by id, or null. Used to check ownership before cancelling.</summary>
+    /// <summary>One ticket by id, or null. Tracked, so it can be updated or removed directly.</summary>
     Task<Ticket?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>Persists changes to an already-loaded ticket (e.g. after rescheduling).</summary>
+    Task UpdateAsync(Ticket ticket, CancellationToken cancellationToken = default);
 
     Task RemoveAsync(Ticket ticket, CancellationToken cancellationToken = default);
 }

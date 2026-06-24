@@ -56,4 +56,14 @@ public sealed class Ticket
         LastName = lastName;
         Age = age;
     }
+
+    /// <summary>
+    /// Reschedules the ticket to a new travel date and time. The route and the
+    /// snapshotted passenger details are left unchanged.
+    /// </summary>
+    public void Reschedule(DateOnly date, TimeOnly time)
+    {
+        Date = date;
+        Time = time;
+    }
 }

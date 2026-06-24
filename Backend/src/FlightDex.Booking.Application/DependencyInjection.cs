@@ -2,6 +2,7 @@ using FlightDex.Booking.Application.Commands.BookTicket;
 using FlightDex.Booking.Application.Commands.CancelTicket;
 using FlightDex.Booking.Application.Commands.Login;
 using FlightDex.Booking.Application.Commands.RegisterUser;
+using FlightDex.Booking.Application.Commands.UpdateTicket;
 using FlightDex.Booking.Application.Dtos;
 using FlightDex.Booking.Application.Queries.GetMyTickets;
 using FlightDex.SharedKernel.Cqrs;
@@ -29,6 +30,10 @@ public static class DependencyInjection
         services.AddScoped<
             ICommandHandler<CancelTicketCommand, bool>,
             CancelTicketCommandHandler>();
+
+        services.AddScoped<
+            ICommandHandler<UpdateTicketCommand, TicketDto?>,
+            UpdateTicketCommandHandler>();
 
         services.AddScoped<
             IQueryHandler<GetMyTicketsQuery, IReadOnlyList<TicketDto>>,

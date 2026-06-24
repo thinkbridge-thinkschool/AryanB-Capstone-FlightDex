@@ -54,6 +54,7 @@
 }
 .detail-head h2 { margin: 0; font-size: 22px; }
 .ticket-id { color: var(--muted); font-size: 14px; }
+.detail-actions { display: flex; gap: 12px; }
 
 .route-block {
   display: grid;

@@ -28,3 +28,9 @@ export interface BookTicketRequest {
   origin: AirportRef;
   destination: AirportRef;
 }
+
+/** Payload for PUT /ticket/{id} — reschedule the travel date and time only. */
+export interface UpdateTicketRequest {
+  date: string;   // "yyyy-MM-dd"
+  time: string;   // "HH:mm"
+}
