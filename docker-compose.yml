@@ -1,21 +1,11 @@
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"   # optional: inspect the cache directly
-    volumes:
-      - flightdex-redis:/data
-
   api:
     build:
       context: ./Backend
-    depends_on:
-      - redis
     environment:
       # SQLite files on a named volume so data survives container restarts.
       ConnectionStrings__FlightDex: "Data Source=/data/flightdex.db"
       ConnectionStrings__Booking: "Data Source=/data/flightdex-booking.db"
-      ConnectionStrings__Redis: "redis:6379"
       # Override in real deployments with a long, random secret.
       Jwt__Key: "flightdex-dev-signing-key-change-me-in-production-0123456789"
       ASPNETCORE_ENVIRONMENT: "Production"
@@ -34,4 +24,3 @@ services:
 
 volumes:
   flightdex-data:
-  flightdex-redis:
