@@ -65,7 +65,6 @@
   padding: 18px;
   margin-bottom: 20px;
 }
-.endpoint { display: flex; flex-direction: column; gap: 2px; }
 .ep-code { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
 .ep-airport { font-size: 14px; font-weight: 600; }
 .arrow { font-size: 24px; color: var(--accent); }
@@ -74,13 +73,7 @@ dl.facts { display: grid; grid-template-columns: 120px 1fr; gap: 10px 14px; marg
 dl.facts dt { color: var(--muted); font-size: 14px; }
 dl.facts dd { margin: 0; font-weight: 600; }
 
-/* Confirmation box */
-.modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-}
+/* Confirmation box — modal-backdrop, .endpoint and .confirm-actions are in styles.css. */
 .confirm-box {
   background: #fff; border-radius: 14px; padding: 24px 26px;
   width: 100%; max-width: 420px;
@@ -88,8 +81,7 @@ dl.facts dd { margin: 0; font-weight: 600; }
 }
 .confirm-box h3 { margin: 0 0 10px; font-size: 20px; }
 .confirm-box p { margin: 6px 0; }
-.confirm-actions { display: flex; gap: 12px; margin-top: 20px; }
-.confirm-actions .btn { flex: 1; }
+.confirm-actions { margin-top: 20px; }
 
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; }

@@ -3,11 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { Airport, FlightDetail, FlightListItem, PagedResult } from './flight.models';
 
-/**
- * Base URL of the FlightDex API. Empty = same-origin: in the Docker setup nginx serves
- * the app and reverse-proxies "/flight" to the API, so relative URLs avoid CORS.
- */
-export const API_BASE_URL = '';
+// All API calls use same-origin relative paths: in the Docker setup nginx serves the
+// app and reverse-proxies "/flight" etc. to the API, so relative URLs avoid CORS.
 
 export interface TimeRange {
   after?: string;   // "HHMM"
@@ -28,7 +25,7 @@ export class FlightService {
     if (time.after) params = params.set('deptTime_After', time.after);
     if (time.before) params = params.set('deptTime_Before', time.before);
 
-    return this.http.get<PagedResult<FlightListItem>>(`${API_BASE_URL}/flight`, { params });
+    return this.http.get<PagedResult<FlightListItem>>('/flight', { params });
   }
 
   /** Arrivals at an airport, optionally from an origin and within a time window. */
@@ -41,21 +38,21 @@ export class FlightService {
     if (time.after) params = params.set('arrTime_After', time.after);
     if (time.before) params = params.set('arrTime_Before', time.before);
 
-    return this.http.get<PagedResult<FlightListItem>>(`${API_BASE_URL}/flight`, { params });
+    return this.http.get<PagedResult<FlightListItem>>('/flight', { params });
   }
 
   /**
-   * Airport search suggestions (codes, airport names and cities) served from the Redis
-   * cache. Does not touch the timetable database — only the actual search does.
+   * Airport search suggestions (codes, airport names and cities) served from the
+   * Locations lookup table. Does not touch the Flights table — only the actual search does.
    */
   getAirportSuggestions(): Observable<string[]> {
-    return this.http.get<string[]>(`${API_BASE_URL}/airports/suggestions`);
+    return this.http.get<string[]>('/airports/suggestions');
   }
 
   /** Full details for a flight code (returns one record, or the first if several match). */
   getDetail(flightCode: string): Observable<FlightDetail> {
     return this.http
-      .get<FlightDetail | FlightDetail[]>(`${API_BASE_URL}/flight/${encodeURIComponent(flightCode)}`)
+      .get<FlightDetail | FlightDetail[]>(`/flight/${encodeURIComponent(flightCode)}`)
       .pipe(map(r => (Array.isArray(r) ? r[0] : r)));
   }
 }
