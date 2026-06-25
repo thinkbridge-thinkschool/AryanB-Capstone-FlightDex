@@ -4,12 +4,13 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FlightService } from '../flight.service';
 import {
-  AIRPORT_INFO, ALL_AIRPORT_ALIASES, Airport, FlightListItem, airportLabel, resolveAirport,
+  AIRPORT_INFO, SERVED_AIRPORT_OPTIONS, Airport, FlightListItem,
+  airportLabel, airportOptionLabel, resolveAirport,
 } from '../flight.models';
 import { AuthService } from '../auth/auth.service';
 import { TicketService } from '../tickets/ticket.service';
 import { Ticket } from '../tickets/ticket.models';
-import { Autocomplete } from '../shared/autocomplete';
+import { Autocomplete, AutocompleteOption } from '../shared/autocomplete';
 import { ShowPickerDirective } from '../shared/show-picker.directive';
 import { httpErrorMessage } from '../shared/http-errors';
 
@@ -26,25 +27,34 @@ export class BookTickets {
 
   readonly today = new Date().toISOString().slice(0, 10);
 
-  // Search boxes (free text, resolved against the served airports / timetable).
-  readonly from = signal('');
-  readonly to = signal('');
+  // Search boxes. The *Text signals hold the displayed value (typed text or a picked
+  // "Name [Code], City" label); the *Term signals hold what's resolved/sent (the code when a
+  // suggestion is picked, else the raw text).
+  readonly from = signal('');       // "From" display text
+  readonly fromTerm = signal('');   // …resolved against the served airports
+  readonly to = signal('');         // "To" display text
+  readonly toTerm = signal('');     // …sent to the timetable search
   readonly date = signal('');
+  readonly time = signal('');       // optional "at or after" departure time (HH:mm)
 
-  // The date input swaps text<->date so the custom placeholder shows when empty.
-  readonly dateType = signal<'text' | 'date'>('text');
-
-  // "From" only allows the 5 served airports — kept in code (code/name/city aliases).
-  readonly originSuggestions = ALL_AIRPORT_ALIASES;
+  // "From" only allows the 5 served airports — kept in code.
+  readonly originSuggestions = SERVED_AIRPORT_OPTIONS;
   // "To" can be any airport — loaded once from the Locations suggestion endpoint.
-  readonly destinationSuggestions = signal<string[]>([]);
+  readonly destinationSuggestions = signal<AutocompleteOption[]>([]);
 
   constructor() {
     this.flights.getAirportSuggestions().subscribe({
-      next: list => this.destinationSuggestions.set(list),
+      next: list => this.destinationSuggestions.set(
+        list.map(a => ({ label: airportOptionLabel(a.code, a.city), value: a.code }))),
       error: () => { /* leave suggestions empty if the cache is unavailable */ },
     });
   }
+
+  // ---- From / To field handlers ----------------------------------------
+  onFromInput(text: string): void { this.from.set(text); this.fromTerm.set(text); }
+  onFromPicked(option: AutocompleteOption): void { this.from.set(option.label); this.fromTerm.set(option.value); }
+  onToInput(text: string): void { this.to.set(text); this.toTerm.set(text); }
+  onToPicked(option: AutocompleteOption): void { this.to.set(option.label); this.toTerm.set(option.value); }
 
   // Flight list (results of a search).
   readonly results = signal<FlightListItem[] | null>(null);
@@ -68,16 +78,11 @@ export class BookTickets {
     return u ? `${u.firstName} ${u.lastName}` : '';
   });
 
-  /** When the date field loses focus while empty, revert to text so the placeholder shows. */
-  onDateBlur(): void {
-    if (!this.date()) this.dateType.set('text');
-  }
-
   search(): void {
     this.bookError.set(null);
     this.booked.set(null);
 
-    const origin = resolveAirport(this.from());
+    const origin = resolveAirport(this.fromTerm());
     if (!origin) {
       this.searchError.set('Origin must be a served airport: BLR, BOM, PNQ, LON or DBX (or its city).');
       this.results.set(null);
@@ -92,7 +97,7 @@ export class BookTickets {
     this.searchError.set(null);
     this.results.set(null);
 
-    this.flights.getDepartures(origin, this.to().trim(), {}, 1, 100).subscribe({
+    this.flights.getDepartures(origin, this.toTerm().trim(), { after: this.time().trim() }, 1, 100).subscribe({
       next: page => {
         this.searchedOrigin.set(origin);
         this.results.set(page.items);

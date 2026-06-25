@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Airport, FlightDetail, FlightListItem, PagedResult } from './flight.models';
+import { Airport, AirportSuggestion, FlightDetail, FlightListItem, PagedResult } from './flight.models';
 
 // All API calls use same-origin relative paths: in the Docker setup nginx serves the
 // app and reverse-proxies "/flight" etc. to the API, so relative URLs avoid CORS.
@@ -42,11 +42,11 @@ export class FlightService {
   }
 
   /**
-   * Airport search suggestions (codes, airport names and cities) served from the
+   * Airport search suggestions (code, name and city per airport) served from the
    * Locations lookup table. Does not touch the Flights table — only the actual search does.
    */
-  getAirportSuggestions(): Observable<string[]> {
-    return this.http.get<string[]>('/airports/suggestions');
+  getAirportSuggestions(): Observable<AirportSuggestion[]> {
+    return this.http.get<AirportSuggestion[]>('/airports/suggestions');
   }
 
   /** Full details for a flight code (returns one record, or the first if several match). */

@@ -8,26 +8,34 @@
       <!-- From (search box with suggestions below) -->
       <div class="form-group">
         <label class="field-label" for="from">From</label>
-        <app-autocomplete inputId="from" placeholder="Select your Origin Airport"
-                          [value]="from()" [suggestions]="originSuggestions" [limit]="originSuggestions.length"
-                          (valueChange)="from.set($event)" />
+        <p class="supported-note">Supported Airports: Pune, Mumbai, Bengaluru, Dubai, London</p>
+        <app-autocomplete inputId="from" placeholder="Enter City or Airport Code"
+                          [value]="from()" [options]="originSuggestions" [limit]="originSuggestions.length"
+                          (valueChange)="onFromInput($event)"
+                          (optionPicked)="onFromPicked($event)" />
       </div>
 
       <!-- To (search box with suggestions below) -->
       <div class="form-group">
         <label class="field-label" for="to">To</label>
-        <app-autocomplete inputId="to" placeholder="Select your Destination Airport"
-                          [value]="to()" [suggestions]="destinationSuggestions()"
-                          (valueChange)="to.set($event)" />
+        <app-autocomplete inputId="to" placeholder="Enter City or Airport Code"
+                          [value]="to()" [options]="destinationSuggestions()"
+                          (valueChange)="onToInput($event)"
+                          (optionPicked)="onToPicked($event)" />
       </div>
 
-      <!-- Date — opens the calendar on click; accepts a typed date too -->
+      <!-- Date — a native date field; one click opens the calendar and it shows the date string -->
       <div class="form-group">
         <label class="field-label" for="date">Date</label>
-        <input id="date" class="input" name="date" appShowPicker
-               [type]="dateType()" placeholder="Select Date of Journey" [min]="today"
-               (focus)="dateType.set('date')" (blur)="onDateBlur()"
+        <input id="date" class="input" name="date" type="date" appShowPicker [min]="today"
                [ngModel]="date()" (ngModelChange)="date.set($event)" />
+      </div>
+
+      <!-- Time — flights at or after this time. Optional. -->
+      <div class="form-group">
+        <label class="field-label" for="time">Time (flights at or after)</label>
+        <input id="time" class="input" name="time" type="time" appShowPicker
+               [ngModel]="time()" (ngModelChange)="time.set($event)" />
       </div>
 
       <button type="submit" class="btn book-btn" [disabled]="searching()">

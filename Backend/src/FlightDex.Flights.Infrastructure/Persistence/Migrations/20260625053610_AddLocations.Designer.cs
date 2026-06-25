@@ -3,6 +3,7 @@ using System;
 using FlightDex.Flights.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FlightDex.Flights.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(FlightsDbContext))]
-    partial class FlightsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260625053610_AddLocations")]
+    partial class AddLocations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -82,23 +85,15 @@ namespace FlightDex.Flights.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("varchar(128)");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("varchar(8)");
-
-                    b.Property<string>("Name")
+                    b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("varchar(128)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("Value")
                         .IsUnique()
-                        .HasDatabaseName("IX_Locations_Code");
+                        .HasDatabaseName("IX_Locations_Value");
 
                     b.ToTable("Locations", (string)null);
                 });

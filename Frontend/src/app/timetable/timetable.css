@@ -1,77 +1,66 @@
-/* "You are currently at" bar — sits directly under the title, above search */
+/* "Timetable" bar — sits directly under the title */
 .at-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
   background: #fff;
   border-bottom: 1px solid var(--line);
   padding: 14px 28px;
 }
+.at-current { display: flex; align-items: baseline; gap: 8px; }
 .at-bar label { font-weight: 700; font-size: 16px; white-space: nowrap; }
-.at-bar .current-at { color: var(--muted); font-size: 14px; margin-left: auto; }
+.at-display-text { font-size: 16px; font-weight: 600; color: #0f172a; }
 
-/* Autocomplete host sizing (the input lives inside the child component) */
-.at-bar .at-input { flex: 0 1 420px; min-width: 320px; }
-.field .field-input { flex: 0 1 240px; min-width: 200px; }
-
-/* Long search bar below the title */
-.search-bar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-  padding: 14px 28px;
-}
-.search-title { font-size: 19px; font-weight: 700; }
-.search-fields { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; flex: 1 1 auto; }
-.field { display: flex; align-items: center; gap: 8px; }
-.field label { font-weight: 600; font-size: 14px; white-space: nowrap; }
-
-.more-toggle {
+/* "Change Airport" button — launches the pop-up */
+.change-airport-toggle {
   background: #eff6ff;
   color: #1e40af;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
-  padding: 8px 14px;
+  padding: 7px 14px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
-.more-toggle .caret { font-size: 11px; }
+.change-airport-toggle:hover { background: #dbeafe; }
 
-/* "More Search Options" panel */
-.more-panel {
+.supported-note { margin: 0 2px 6px; font-size: 13px; color: var(--muted); }
+
+/* Change Airport pop-up. The supported-airports note sits above the input so it stays
+   visible when the suggestion list drops down below the field. */
+.change-airport-modal { position: relative; max-width: 460px; }
+.change-airport-modal .modal-title { margin: 0 0 14px; font-size: 20px; }
+.change-airport-modal .at-input { display: block; }
+.change-airport-modal .close { position: absolute; top: 12px; right: 16px; }
+.change-airport-modal .error.small { margin: 10px 0 0; }
+
+.field .field-input { flex: 0 1 240px; min-width: 180px; }
+
+.field { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.field label { font-weight: 600; font-size: 14px; white-space: nowrap; }
+
+.error.small { padding: 6px 10px; font-size: 13px; margin: 10px auto 0; }
+
+/* Per-box search dropdown panel */
+.box-search {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 18px;
+  flex-direction: column;
+  gap: 12px;
   background: #f8fafc;
   border-bottom: 1px solid var(--line);
-  padding: 12px 28px;
+  padding: 14px 18px;
 }
-.more-row { display: flex; align-items: center; gap: 8px; }
-.row-label { color: var(--muted); font-size: 14px; }
-.more-row input {
+.box-search input[type="time"] {
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   font-size: 14px;
 }
-.and { color: var(--muted); }
-
-.error.small { padding: 6px 10px; font-size: 13px; margin: 10px auto 0; }
+.box-search-actions { display: flex; gap: 10px; }
 
 /* Results */
 .results { margin-top: 8px; }
-.results-head {
-  display: flex; align-items: center; justify-content: center;
-  gap: 14px; margin-bottom: 16px; text-align: center; flex-wrap: wrap;
-}
-.results-head h2 { margin: 0; font-size: 22px; }
 
 .boxes {
   display: grid;
@@ -95,7 +84,7 @@
   overflow: hidden;
 }
 .box-head {
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: space-between;
   padding: 13px 18px;
   font-weight: 600;
   color: #fff;
@@ -103,6 +92,21 @@
 .box-head h3 { margin: 0; font-size: 18px; }
 .box-head.dep { background: #2563eb; }
 .box-head.arr { background: #059669; }
+
+/* "Search Departures" / "Search Arrivals" dropdown toggle, on the coloured header */
+.search-toggle {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.search-toggle:hover, .search-toggle.open { background: rgba(255, 255, 255, 0.3); }
+.search-toggle .caret { font-size: 10px; margin-left: 4px; }
 
 /* The internal scroll lives here — the page itself doesn't grow. */
 .box-list { max-height: 580px; overflow-y: auto; }
@@ -164,5 +168,4 @@ table.flights { width: 100%; border-collapse: collapse; }
 
 @media (max-width: 860px) {
   .boxes { grid-template-columns: 1fr; }
-  .at-bar .current-at { margin-left: 0; }
 }

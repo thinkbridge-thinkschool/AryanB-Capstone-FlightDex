@@ -10,11 +10,11 @@ namespace FlightDex.Flights.Infrastructure.Caching;
 /// </summary>
 internal sealed class SqliteAirportSuggestionCache(FlightsDbContext dbContext) : IAirportSuggestionCache
 {
-    public async Task<IReadOnlyList<string>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AirportSuggestion>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.Locations.AsNoTracking()
-            .OrderBy(l => l.Value)
-            .Select(l => l.Value)
+            .OrderBy(l => l.Name)
+            .Select(l => new AirportSuggestion(l.Code, l.Name, l.City))
             .ToListAsync(cancellationToken);
     }
 }

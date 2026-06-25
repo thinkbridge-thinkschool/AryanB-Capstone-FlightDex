@@ -1,10 +1,17 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 
+/** A selectable suggestion: `label` is shown and filtered on; `value` is emitted when picked. */
+export interface AutocompleteOption {
+  label: string;
+  value: string;
+}
+
 /**
  * A text field with a type-ahead suggestion list that drops down *below* the
- * input (not a native <datalist>). Suggestions are filtered case-insensitively
- * as the user types. Emits `valueChange` on every keystroke/selection and
- * `selected` when a suggestion is chosen or Enter is pressed.
+ * input (not a native <datalist>). Each option's `label` is shown in the list and
+ * matched case-insensitively against what the user types; picking one emits its
+ * `value` via `optionPicked`. `valueChange` fires on every keystroke (raw text) and
+ * `submit` fires when Enter is pressed without a suggestion highlighted.
  */
 @Component({
   selector: 'app-autocomplete',
@@ -21,11 +28,11 @@ import { Component, computed, input, output, signal } from '@angular/core';
              (keydown)="onKey($event)" />
       @if (open() && filtered().length) {
         <ul class="ac-list">
-          @for (s of filtered(); track s; let i = $index) {
+          @for (o of filtered(); track o.label; let i = $index) {
             <li class="ac-item" [class.active]="i === highlight()"
                 (mousedown)="$event.preventDefault()"
-                (click)="choose(s)"
-                (mouseenter)="highlight.set(i)">{{ s }}</li>
+                (click)="choose(o)"
+                (mouseenter)="highlight.set(i)">{{ o.label }}</li>
           }
         </ul>
       }
@@ -51,20 +58,24 @@ import { Component, computed, input, output, signal } from '@angular/core';
 export class Autocomplete {
   readonly value = input<string>('');
   readonly placeholder = input<string>('');
-  readonly suggestions = input<readonly string[]>([]);
+  readonly options = input<readonly AutocompleteOption[]>([]);
   readonly inputId = input<string>('');
   readonly limit = input<number>(10);
 
+  /** Raw input text on every keystroke. */
   readonly valueChange = output<string>();
-  readonly selected = output<string>();
+  /** A suggestion was chosen (click or Enter on a highlighted item). */
+  readonly optionPicked = output<AutocompleteOption>();
+  /** Enter pressed with no suggestion highlighted — carries the raw text. */
+  readonly submit = output<string>();
 
   readonly open = signal(false);
   readonly highlight = signal(-1);
 
   readonly filtered = computed(() => {
     const q = this.value().trim().toLowerCase();
-    const all = this.suggestions();
-    const matches = q ? all.filter(s => s.toLowerCase().includes(q)) : all.slice();
+    const all = this.options();
+    const matches = q ? all.filter(o => o.label.toLowerCase().includes(q)) : all.slice();
     return matches.slice(0, this.limit());
   });
 
@@ -93,7 +104,7 @@ export class Autocomplete {
           this.choose(items[h]);
         } else {
           this.open.set(false);         // let a host <form> submit on Enter
-          this.selected.emit(this.value());
+          this.submit.emit(this.value());
         }
         break;
       }
@@ -104,9 +115,8 @@ export class Autocomplete {
     }
   }
 
-  choose(s: string): void {
-    this.valueChange.emit(s);
-    this.selected.emit(s);
+  choose(o: AutocompleteOption): void {
+    this.optionPicked.emit(o);
     this.open.set(false);
     this.highlight.set(-1);
   }

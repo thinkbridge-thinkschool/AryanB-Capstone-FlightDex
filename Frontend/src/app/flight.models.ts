@@ -103,5 +103,23 @@ export function resolveAirport(term: string): Airport | null {
   return match?.code ?? null;
 }
 
-/** Every alias across all airports — feeds the served-airport autocomplete fields. */
-export const ALL_AIRPORT_ALIASES: string[] = AIRPORT_INFO.flatMap(a => a.aliases);
+/** One airport suggestion from the Locations endpoint (code, name, city per airport). */
+export interface AirportSuggestion {
+  code: string;
+  name: string;
+  city: string;
+}
+
+/** Suggestion display label, e.g. "Delhi [DEL]". */
+export function airportOptionLabel(code: string, city: string): string {
+  return `${city} [${code}]`;
+}
+
+/**
+ * Autocomplete options for the 5 served airports — kept in code. `value` is the code so the
+ * field resolves cleanly; `label` is the "City [Code]" display string.
+ */
+export const SERVED_AIRPORT_OPTIONS = AIRPORT_INFO.map(a => ({
+  label: airportOptionLabel(a.code, a.city),
+  value: a.code,
+}));

@@ -2,16 +2,13 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FlightService, TimeRange } from '../flight.service';
 import {
-  ALL_AIRPORT_ALIASES, Airport, FlightDetail, FlightListItem,
-  PagedResult, airportCity, airportFullName, airportLabel, resolveAirport,
+  SERVED_AIRPORT_OPTIONS, Airport, FlightDetail, FlightListItem,
+  PagedResult, airportCity, airportFullName, airportOptionLabel, resolveAirport,
 } from '../flight.models';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Autocomplete } from '../shared/autocomplete';
+import { Autocomplete, AutocompleteOption } from '../shared/autocomplete';
 import { ShowPickerDirective } from '../shared/show-picker.directive';
 import { httpErrorMessage } from '../shared/http-errors';
-
-/** Which result box(es) are shown. */
-type View = 'both' | 'departures' | 'arrivals';
 
 const PAGE_SIZE = 30;
 
@@ -34,32 +31,39 @@ const emptyBox = (): BoxState => ({ result: null, page: 1, loading: false, error
 export class Timetable {
   private readonly flights = inject(FlightService);
 
-  /** Served-airport suggestions (code/name/city) for the "currently at" box — kept in code. */
-  readonly aliasSuggestions = ALL_AIRPORT_ALIASES;
-  /** Counterpart (any-airport) suggestions for the search boxes — from the Redis-backed cache. */
-  readonly suggestions = signal<string[]>([]);
+  /** Served-airport options (the 5 airports) for the "Change Airport" box — kept in code. */
+  readonly airportOptions = SERVED_AIRPORT_OPTIONS;
+  /** Counterpart (any-airport) options for the search boxes — from the Locations cache. */
+  readonly suggestions = signal<AutocompleteOption[]>([]);
 
   /** Exposed for the detail modal. */
   readonly airportFullName = airportFullName;
   readonly airportCity = airportCity;
 
-  // "You are currently at" search box. Default airport: Pune (PNQ).
+  // "Timetable for" airport selector. Default airport: Pune (PNQ).
   readonly airportSearch = signal('');
   readonly at = signal<Airport>('PNQ');
   readonly airportError = signal<string | null>(null);
+  /** Whether the "Change Airport" dropdown is open. */
+  readonly changeAirportOpen = signal(false);
 
-  readonly view = signal<View>('both');
+  // Per-box search fields. The *Text signals hold what's shown in the input (a typed string
+  // or a picked "Name [Code], City" label); the *Term signals hold the value actually sent to
+  // the API (the airport code when a suggestion is picked, else the raw text).
+  readonly departTo = signal('');         // Departures box: "Departing To:" display text
+  readonly departToTerm = signal('');     // …the search term sent to the API
+  readonly arriveFrom = signal('');       // Arrivals box: "Arriving From:" display text
+  readonly arriveFromTerm = signal('');   // …the search term sent to the API
 
-  // Search bar fields (accept a destination/origin code OR a city name).
-  readonly departTo = signal('');     // "Departing To:"
-  readonly arriveFrom = signal('');   // "Arriving From:"
-
-  // "More Search Options" dropdown (time filters).
-  readonly moreOptions = signal(false);
+  // Per-box time filters.
   readonly deptAfter = signal('');
   readonly deptBefore = signal('');
   readonly arrAfter = signal('');
   readonly arrBefore = signal('');
+
+  // Per-box search dropdowns.
+  readonly depSearchOpen = signal(false);
+  readonly arrSearchOpen = signal(false);
 
   // The two result boxes.
   readonly departures = signal<BoxState>(emptyBox());
@@ -69,30 +73,35 @@ export class Timetable {
   readonly selected = signal<FlightDetail | null>(null);
   readonly detailLoading = signal(false);
 
-  readonly currentAirportLabel = computed(() => airportLabel(this.at()));
-  readonly resultsTitle = computed(() => {
-    const label = this.currentAirportLabel();
-    switch (this.view()) {
-      case 'departures': return `Departures at ${label}`;
-      case 'arrivals': return `Arrivals at ${label}`;
-      default: return `Departures and Arrivals at ${label}`;
-    }
+  /** Display text for the airport field, e.g. "Pune International Airport [PNQ], Pune". */
+  readonly airportDisplay = computed(() => {
+    const code = this.at();
+    return `${airportFullName(code)} [${code}], ${airportCity(code)}`;
   });
 
   constructor() {
     this.loadDepartures();
     this.loadArrivals();
     this.flights.getAirportSuggestions().subscribe({
-      next: list => this.suggestions.set(list),
+      next: list => this.suggestions.set(
+        list.map(a => ({ label: airportOptionLabel(a.code, a.city), value: a.code }))),
       error: () => { /* leave suggestions empty if the cache is unavailable */ },
     });
   }
 
   // ---- Airport selection ------------------------------------------------
 
-  /** Picked from the "currently at" suggestion list or via Enter. */
-  onAirportSelected(value: string): void {
-    this.airportSearch.set(value);
+  /** Open/close the "Change Airport" dropdown. */
+  toggleChangeAirport(): void {
+    this.changeAirportOpen.update(open => {
+      if (!open) { this.airportSearch.set(''); this.airportError.set(null); }
+      return !open;
+    });
+  }
+
+  /** Picked an airport from the suggestion list. */
+  onAirportPicked(option: AutocompleteOption): void {
+    this.airportSearch.set(option.value);
     this.applyAirportSearch();
   }
 
@@ -103,43 +112,66 @@ export class Timetable {
       return;
     }
     this.airportError.set(null);
+    this.changeAirportOpen.set(false);
     this.at.set(code);
-    this.showBoth(); // reset to the default both-boxes view for the new airport
-  }
 
-  // ---- Search bar -------------------------------------------------------
-
-  toggleMoreOptions(): void {
-    this.moreOptions.update(v => !v);
-  }
-
-  /** Runs the search and shows only the relevant box(es). */
-  doSearch(): void {
-    const wantsDep = !!(this.departTo().trim() || this.deptAfter().trim() || this.deptBefore().trim());
-    const wantsArr = !!(this.arriveFrom().trim() || this.arrAfter().trim() || this.arrBefore().trim());
-
-    if (wantsDep && !wantsArr) this.view.set('departures');
-    else if (wantsArr && !wantsDep) this.view.set('arrivals');
-    else this.view.set('both');
-
-    this.departures.update(b => ({ ...b, page: 1 }));
-    this.arrivals.update(b => ({ ...b, page: 1 }));
-
-    const v = this.view();
-    if (v === 'both' || v === 'departures') this.loadDepartures();
-    if (v === 'both' || v === 'arrivals') this.loadArrivals();
-  }
-
-  /** Clear filters and show both boxes for the current airport. */
-  showBoth(): void {
-    this.departTo.set(''); this.arriveFrom.set('');
+    // New airport: clear any per-box searches and reload both boxes from the top.
+    this.departTo.set(''); this.departToTerm.set('');
+    this.arriveFrom.set(''); this.arriveFromTerm.set('');
     this.deptAfter.set(''); this.deptBefore.set('');
     this.arrAfter.set(''); this.arrBefore.set('');
+    this.depSearchOpen.set(false); this.arrSearchOpen.set(false);
     this.departures.update(b => ({ ...b, page: 1 }));
     this.arrivals.update(b => ({ ...b, page: 1 }));
-    this.view.set('both');
     this.loadDepartures();
     this.loadArrivals();
+  }
+
+  // ---- Per-box search ---------------------------------------------------
+
+  toggleDepSearch(): void { this.depSearchOpen.update(v => !v); }
+  toggleArrSearch(): void { this.arrSearchOpen.update(v => !v); }
+
+  /** Free text typed into "Departing To:" — both the display and the search term are the text. */
+  onDepartToInput(text: string): void { this.departTo.set(text); this.departToTerm.set(text); }
+  onArriveFromInput(text: string): void { this.arriveFrom.set(text); this.arriveFromTerm.set(text); }
+
+  /** Picked a destination suggestion: show its label, search by its code. */
+  onDepartToPicked(option: AutocompleteOption): void {
+    this.departTo.set(option.label);
+    this.departToTerm.set(option.value);
+    this.searchDepartures();
+  }
+
+  /** Picked an origin suggestion: show its label, search by its code. */
+  onArriveFromPicked(option: AutocompleteOption): void {
+    this.arriveFrom.set(option.label);
+    this.arriveFromTerm.set(option.value);
+    this.searchArrivals();
+  }
+
+  /** Search departures with the current filters (resets to the first page). */
+  searchDepartures(): void {
+    this.departures.update(b => ({ ...b, page: 1 }));
+    this.loadDepartures();
+  }
+
+  /** Search arrivals with the current filters (resets to the first page). */
+  searchArrivals(): void {
+    this.arrivals.update(b => ({ ...b, page: 1 }));
+    this.loadArrivals();
+  }
+
+  clearDepSearch(): void {
+    this.departTo.set(''); this.departToTerm.set('');
+    this.deptAfter.set(''); this.deptBefore.set('');
+    this.searchDepartures();
+  }
+
+  clearArrSearch(): void {
+    this.arriveFrom.set(''); this.arriveFromTerm.set('');
+    this.arrAfter.set(''); this.arrBefore.set('');
+    this.searchArrivals();
   }
 
   // ---- Loading ----------------------------------------------------------
@@ -147,7 +179,7 @@ export class Timetable {
   private loadDepartures(): void {
     this.departures.update(b => ({ ...b, loading: true, error: null }));
     const range: TimeRange = { after: this.deptAfter().trim(), before: this.deptBefore().trim() };
-    this.flights.getDepartures(this.at(), this.departTo(), range, this.departures().page, PAGE_SIZE)
+    this.flights.getDepartures(this.at(), this.departToTerm(), range, this.departures().page, PAGE_SIZE)
       .subscribe({
         next: r => this.departures.update(b => ({ ...b, result: r, loading: false })),
         error: (err: HttpErrorResponse) => this.departures.update(b => ({
@@ -160,7 +192,7 @@ export class Timetable {
   private loadArrivals(): void {
     this.arrivals.update(b => ({ ...b, loading: true, error: null }));
     const range: TimeRange = { after: this.arrAfter().trim(), before: this.arrBefore().trim() };
-    this.flights.getArrivals(this.at(), this.arriveFrom(), range, this.arrivals().page, PAGE_SIZE)
+    this.flights.getArrivals(this.at(), this.arriveFromTerm(), range, this.arrivals().page, PAGE_SIZE)
       .subscribe({
         next: r => this.arrivals.update(b => ({ ...b, result: r, loading: false })),
         error: (err: HttpErrorResponse) => this.arrivals.update(b => ({
