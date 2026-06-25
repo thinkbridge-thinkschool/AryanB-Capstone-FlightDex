@@ -90,3 +90,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Exposed so the integration/E2E test project can boot the real app with
+// WebApplicationFactory<Program>. Top-level statements otherwise emit an internal Program.
+public partial class Program;

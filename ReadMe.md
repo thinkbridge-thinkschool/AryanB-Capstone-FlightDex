@@ -11,3 +11,6 @@
     - Day 28 Piece 1 - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/tree/D28P1---DesignReview_ADR
 - Solutions from Day 29:
     - Day 29 Piece 1 - [Documentation/Solutions/D29P1_Solution.md](Documentation/Solutions/D29P1_Solution.md)
+    - Day 30 Piece 1 - [Documentation/Solutions/D30P1_Solution.md](Documentation/Solutions/D30P1_Solution.md)
+    - Day 31 Piece 1 - [Documentation/Solutions/D31P1_Solution.md](Documentation/Solutions/D31P1_Solution.md)
+        - [![Integration, Perf and Security](https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/actions/workflows/ci.yml/badge.svg)](https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/actions/workflows/ci.yml)

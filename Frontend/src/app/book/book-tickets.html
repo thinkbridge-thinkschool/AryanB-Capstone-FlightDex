@@ -1,79 +1,104 @@
 <main class="container book-wrap">
-  <h1 class="page-title">Book Tickets</h1>
-
   <section class="search-card">
-    <span class="search-heading">Search</span>
+    <h2 class="search-heading">Search Flights</h2>
 
     <form class="book-form" (ngSubmit)="search()">
-      <!-- From (search box with suggestions below) -->
-      <div class="form-group">
-        <label class="field-label" for="from">From</label>
-        <p class="supported-note">Supported Airports: Pune, Mumbai, Bengaluru, Dubai, London</p>
-        <app-autocomplete inputId="from" placeholder="Enter City or Airport Code"
-                          [value]="from()" [options]="originSuggestions" [limit]="originSuggestions.length"
-                          (valueChange)="onFromInput($event)"
-                          (optionPicked)="onFromPicked($event)" />
+      <!-- Line one: From / To -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="field-label" for="from">From:</label>
+          <app-autocomplete inputId="from" placeholder="City or Airport Code"
+                            [value]="from()" [options]="originSuggestions" [limit]="originSuggestions.length"
+                            (valueChange)="onFromInput($event)"
+                            (optionPicked)="onFromPicked($event)" />
+        </div>
+        <div class="form-group">
+          <label class="field-label" for="to">To:</label>
+          <app-autocomplete inputId="to" placeholder="City or Airport Code"
+                            [value]="to()" [options]="destinationSuggestions()"
+                            (valueChange)="onToInput($event)"
+                            (optionPicked)="onToPicked($event)" />
+        </div>
       </div>
 
-      <!-- To (search box with suggestions below) -->
-      <div class="form-group">
-        <label class="field-label" for="to">To</label>
-        <app-autocomplete inputId="to" placeholder="Enter City or Airport Code"
-                          [value]="to()" [options]="destinationSuggestions()"
-                          (valueChange)="onToInput($event)"
-                          (optionPicked)="onToPicked($event)" />
-      </div>
-
-      <!-- Date — a native date field; one click opens the calendar and it shows the date string -->
-      <div class="form-group">
-        <label class="field-label" for="date">Date</label>
-        <input id="date" class="input" name="date" type="date" appShowPicker [min]="today"
-               [ngModel]="date()" (ngModelChange)="date.set($event)" />
-      </div>
-
-      <!-- Time — flights at or after this time. Optional. -->
-      <div class="form-group">
-        <label class="field-label" for="time">Time (flights at or after)</label>
-        <input id="time" class="input" name="time" type="time" appShowPicker
-               [ngModel]="time()" (ngModelChange)="time.set($event)" />
+      <!-- Line two: Date / time-filter dropdown -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="field-label" for="date">Date:</label>
+          <input id="date" class="input" name="date" type="date" appShowPicker [min]="today"
+                 [ngModel]="date()" (ngModelChange)="date.set($event)" />
+        </div>
+        <div class="form-group time-filter">
+          <label class="field-label">Filter by time</label>
+          <button type="button" class="input time-toggle" (click)="toggleTimeFilter()">
+            <span>{{ timeFilterLabel() }}</span>
+            <span class="caret">{{ timeFilterOpen() ? '▴' : '▾' }}</span>
+          </button>
+          @if (timeFilterOpen()) {
+            <div class="time-panel">
+              <label class="time-field">
+                <span>After</span>
+                <input class="input" name="after" type="time" appShowPicker
+                       [ngModel]="after()" (ngModelChange)="after.set($event)" />
+              </label>
+              <label class="time-field">
+                <span>Before</span>
+                <input class="input" name="before" type="time" appShowPicker
+                       [ngModel]="before()" (ngModelChange)="before.set($event)" />
+              </label>
+            </div>
+          }
+        </div>
       </div>
 
       <button type="submit" class="btn book-btn" [disabled]="searching()">
-        {{ searching() ? 'Searching…' : 'Search Flights' }}
+        {{ searching() ? 'Searching…' : 'Search' }}
       </button>
     </form>
 
     @if (searchError()) { <p class="error">{{ searchError() }}</p> }
   </section>
 
-  <!-- Flight list -->
+  <!-- Route list -->
   @if (results(); as flights) {
     <section class="results-card">
-      <h2 class="results-title">
-        Flights from {{ searchedOriginLabel() }}
-        <span class="muted">· {{ date() }}</span>
-      </h2>
-
       @if (flights.length === 0) {
         <p class="muted pad">No flights match. Try a different destination.</p>
       } @else {
-        <p class="muted hint">Select a flight to book it.</p>
-        <table class="flight-table">
-          <thead>
-            <tr><th>Time</th><th>Flight</th><th>Airline</th><th>Destination</th><th></th></tr>
-          </thead>
-          <tbody>
-            @for (f of flights; track f.flightCode + f.time) {
-              <tr class="clickable" (click)="selectFlight(f)">
-                <td class="time">{{ f.time }}</td>
-                <td class="code">{{ f.flightCode }}</td>
-                <td>{{ f.airline }}</td>
-                <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
-                <td><span class="select-link">Select &rsaquo;</span></td>
+        <div class="table-scroll">
+          <table class="route-table">
+            <thead>
+              <tr>
+                <th rowspan="2">Time</th>
+                <th colspan="3" class="group">From</th>
+                <th colspan="3" class="group">To</th>
+                <th rowspan="2">Airline</th>
+                <th rowspan="2">Flight</th>
+                <th rowspan="2" class="buy-col"></th>
               </tr>
-            }
-          </tbody>
-        </table>
+              <tr>
+                <th>City</th><th>Airport</th><th>Code</th>
+                <th>City</th><th>Airport</th><th>Code</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of flights; track f.flightCode + f.time) {
+                <tr>
+                  <td class="time">{{ f.time }}</td>
+                  <td>{{ airportCity(searchedOrigin()!) }}</td>
+                  <td class="airport">{{ airportFullName(searchedOrigin()!) }}</td>
+                  <td class="code">{{ searchedOrigin() }}</td>
+                  <td>{{ f.city }}</td>
+                  <td class="airport">{{ f.airport }}</td>
+                  <td class="code">{{ f.code }}</td>
+                  <td>{{ f.airline }}</td>
+                  <td class="code">{{ f.flightCode }}</td>
+                  <td><button type="button" class="buy-btn" (click)="buyFlight(f)">Buy</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </section>
   }
@@ -93,40 +118,57 @@
   }
 </main>
 
-<!-- Confirmation box -->
+<!-- Confirmation box + fake payment gateway -->
 @if (selectedFlight(); as f) {
-  <div class="modal-backdrop" (click)="dismissConfirm()">
-    <div class="confirm-box" (click)="$event.stopPropagation()">
-      <h3>Confirm your booking</h3>
+  @if (paymentStage() === 'none') {
+    <div class="modal-backdrop" (click)="dismissConfirm()">
+      <div class="confirm-box" (click)="$event.stopPropagation()">
+        <h3>Confirm your booking</h3>
 
-      <div class="route-block">
-        <div class="endpoint">
-          <span class="ep-code">{{ searchedOrigin() }}</span>
-          <span class="muted">Origin</span>
+        <div class="route-block">
+          <div class="endpoint">
+            <span class="ep-code">{{ searchedOrigin() }}</span>
+            <span class="muted">Origin</span>
+          </div>
+          <div class="arrow">✈</div>
+          <div class="endpoint">
+            <span class="ep-code">{{ f.code }}</span>
+            <span class="muted">{{ f.city }}</span>
+          </div>
         </div>
-        <div class="arrow">✈</div>
-        <div class="endpoint">
-          <span class="ep-code">{{ f.code }}</span>
-          <span class="muted">{{ f.city }}</span>
+
+        <dl class="facts">
+          <dt>Flight</dt><dd>{{ f.flightCode }} · {{ f.airline }}</dd>
+          <dt>Destination</dt><dd>{{ f.airport }}</dd>
+          <dt>Date</dt><dd>{{ date() }}</dd>
+          <dt>Time</dt><dd>{{ f.time }}</dd>
+          <dt>Passenger</dt><dd>{{ passengerName() }}</dd>
+          <dt>Fare</dt><dd class="fare">{{ priceLoading() ? 'Fetching price…' : priceLabel }}</dd>
+        </dl>
+
+        @if (bookError()) { <p class="error">{{ bookError() }}</p> }
+
+        <div class="confirm-actions">
+          <button class="btn" [disabled]="priceLoading() || !priceReady()" (click)="proceedToPayment()">
+            {{ priceLoading() ? 'Fetching price…' : 'Proceed to Payment' }}
+          </button>
+          <button class="btn ghost" (click)="dismissConfirm()">Back</button>
         </div>
-      </div>
-
-      <dl class="facts">
-        <dt>Flight</dt><dd>{{ f.flightCode }} · {{ f.airline }}</dd>
-        <dt>Destination</dt><dd>{{ f.airport }}</dd>
-        <dt>Date</dt><dd>{{ date() }}</dd>
-        <dt>Time</dt><dd>{{ f.time }}</dd>
-        <dt>Passenger</dt><dd>{{ passengerName() }}</dd>
-      </dl>
-
-      @if (bookError()) { <p class="error">{{ bookError() }}</p> }
-
-      <div class="confirm-actions">
-        <button class="btn" [disabled]="booking()" (click)="confirmBooking()">
-          {{ booking() ? 'Booking…' : 'Confirm & Book' }}
-        </button>
-        <button class="btn ghost" [disabled]="booking()" (click)="dismissConfirm()">Back</button>
       </div>
     </div>
-  </div>
+  } @else {
+    <div class="modal-backdrop">
+      <div class="gateway-box">
+        @if (paymentStage() === 'processing') {
+          <div class="spinner"></div>
+          <h3>Processing payment…</h3>
+          <p class="muted">Paying {{ priceLabel }} — please don't close this window.</p>
+        } @else {
+          <div class="pay-check">✓</div>
+          <h3>Payment Completed</h3>
+          <p class="muted">{{ priceLabel }} paid. Booking your ticket…</p>
+        }
+      </div>
+    </div>
+  }
 }

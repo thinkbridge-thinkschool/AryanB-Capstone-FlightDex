@@ -11,6 +11,14 @@ internal sealed class FlightRepository(FlightsDbContext dbContext, IMemoryCache 
     public async Task<PagedResult<Flight>> GetPagedAsync(
         FlightQuerySpec spec, CancellationToken cancellationToken = default)
     {
+        // The timetable is static for the life of the process, so a given (filter + page)
+        // always yields the same page. Cache the whole result — on a repeat request we skip
+        // SQLite (both the COUNT and the items query) and the EF materialisation entirely.
+        var cacheKey = $"flight-page:{spec.Direction}:{spec.Airport}:{spec.CounterpartTerm}:" +
+                       $"{spec.TimeAfter}:{spec.TimeBefore}:{spec.Page}:{spec.PageSize}";
+        if (cache.TryGetValue(cacheKey, out PagedResult<Flight>? cached) && cached is not null)
+            return cached;
+
         var query = dbContext.Flights.AsNoTracking()
             .Where(f => f.Direction == spec.Direction);
 
@@ -33,14 +41,7 @@ internal sealed class FlightRepository(FlightsDbContext dbContext, IMemoryCache 
         if (spec.TimeBefore is { } before)
             query = query.Where(f => f.ScheduledTime <= before);
 
-        // The timetable is static for the life of the process, so a given filter's total
-        // never changes — cache it and skip the COUNT(*) on repeat/page requests.
-        var countKey = $"flight-count:{spec.Direction}:{spec.Airport}:{spec.CounterpartTerm}:{spec.TimeAfter}:{spec.TimeBefore}";
-        if (!cache.TryGetValue(countKey, out int total))
-        {
-            total = await query.CountAsync(cancellationToken);
-            cache.Set(countKey, total);
-        }
+        var total = await query.CountAsync(cancellationToken);
 
         var items = await query
             .OrderBy(f => f.ScheduledTime)
@@ -49,7 +50,9 @@ internal sealed class FlightRepository(FlightsDbContext dbContext, IMemoryCache 
             .Take(spec.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<Flight>(items, spec.Page, spec.PageSize, total);
+        var result = new PagedResult<Flight>(items, spec.Page, spec.PageSize, total);
+        cache.Set(cacheKey, result);
+        return result;
     }
 
     public async Task<IReadOnlyList<Flight>> GetByFlightCodeAsync(

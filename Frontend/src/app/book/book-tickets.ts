@@ -5,7 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FlightService } from '../flight.service';
 import {
   AIRPORT_INFO, SERVED_AIRPORT_OPTIONS, Airport, FlightListItem,
-  airportLabel, airportOptionLabel, resolveAirport,
+  airportCity, airportFullName, airportLabel, airportOptionLabel, resolveAirport,
 } from '../flight.models';
 import { AuthService } from '../auth/auth.service';
 import { TicketService } from '../tickets/ticket.service';
@@ -35,7 +35,25 @@ export class BookTickets {
   readonly to = signal('');         // "To" display text
   readonly toTerm = signal('');     // …sent to the timetable search
   readonly date = signal('');
-  readonly time = signal('');       // optional "at or after" departure time (HH:mm)
+  // Optional departure-time window. `after`/`before` are HH:mm strings; the dropdown
+  // that holds them toggles open via `timeFilterOpen`.
+  readonly after = signal('');
+  readonly before = signal('');
+  readonly timeFilterOpen = signal(false);
+
+  // Airport name/city helpers for the result route blocks.
+  readonly airportCity = airportCity;
+  readonly airportFullName = airportFullName;
+
+  toggleTimeFilter(): void { this.timeFilterOpen.update(v => !v); }
+  /** Short summary of the active time window for the dropdown button. */
+  readonly timeFilterLabel = computed(() => {
+    const a = this.after(), b = this.before();
+    if (a && b) return `${a}–${b}`;
+    if (a) return `After ${a}`;
+    if (b) return `Before ${b}`;
+    return 'Any time';
+  });
 
   // "From" only allows the 5 served airports — kept in code.
   readonly originSuggestions = SERVED_AIRPORT_OPTIONS;
@@ -67,11 +85,18 @@ export class BookTickets {
     return o ? airportLabel(o) : '';
   });
 
-  // Confirmation + booking.
+  // Buy → fetch fare → fake payment gateway → book.
   readonly selectedFlight = signal<FlightListItem | null>(null);
+  readonly priceReady = signal(false);   // fare "loaded" (placeholder, no real amount)
+  readonly priceLoading = signal(false);
   readonly booking = signal(false);
   readonly bookError = signal<string | null>(null);
   readonly booked = signal<Ticket | null>(null);
+  /** Fake payment-gateway state. */
+  readonly paymentStage = signal<'none' | 'processing' | 'completed'>('none');
+
+  /** Placeholder fare — shown verbatim, no amount is computed. */
+  readonly priceLabel = 'INR XX,XXX';
 
   readonly passengerName = computed(() => {
     const u = this.auth.user();
@@ -81,6 +106,9 @@ export class BookTickets {
   search(): void {
     this.bookError.set(null);
     this.booked.set(null);
+    this.selectedFlight.set(null);
+    this.priceReady.set(false);
+    this.paymentStage.set('none');
 
     const origin = resolveAirport(this.fromTerm());
     if (!origin) {
@@ -97,7 +125,8 @@ export class BookTickets {
     this.searchError.set(null);
     this.results.set(null);
 
-    this.flights.getDepartures(origin, this.toTerm().trim(), { after: this.time().trim() }, 1, 100).subscribe({
+    const range = { after: this.after().trim(), before: this.before().trim() };
+    this.flights.getDepartures(origin, this.toTerm().trim(), range, 1, 100).subscribe({
       next: page => {
         this.searchedOrigin.set(origin);
         this.results.set(page.items);
@@ -110,22 +139,47 @@ export class BookTickets {
     });
   }
 
-  /** Open the confirmation box for a chosen flight. */
-  selectFlight(flight: FlightListItem): void {
+  /** Buy a flight: open the confirmation box and fetch its fare. */
+  buyFlight(flight: FlightListItem): void {
     this.bookError.set(null);
     this.selectedFlight.set(flight);
+    this.fetchPrice();
+  }
+
+  /** Simulated fare lookup — short "network" delay, then the placeholder fare shows. */
+  private fetchPrice(): void {
+    this.priceReady.set(false);
+    this.priceLoading.set(true);
+    setTimeout(() => {
+      this.priceReady.set(true);
+      this.priceLoading.set(false);
+    }, 600);
   }
 
   dismissConfirm(): void {
-    if (!this.booking()) this.selectedFlight.set(null);
+    if (this.booking() || this.paymentStage() !== 'none') return;
+    this.selectedFlight.set(null);
+    this.priceReady.set(false);
   }
 
-  confirmBooking(): void {
+  /** Confirm the fare → fake payment gateway (always "completed") → book the ticket. */
+  proceedToPayment(): void {
+    if (!this.priceReady()) return;
+    this.bookError.set(null);
+    this.paymentStage.set('processing');
+    setTimeout(() => {
+      this.paymentStage.set('completed');     // gateway always succeeds
+      setTimeout(() => this.confirmBooking(), 900);
+    }, 1500);
+  }
+
+  private confirmBooking(): void {
     const flight = this.selectedFlight();
     const origin = this.searchedOrigin();
     const originInfo = AIRPORT_INFO.find(a => a.code === origin);
 
     if (!flight || !originInfo || !this.date()) {
+      this.paymentStage.set('none');
       this.bookError.set('Something is missing — please search and pick a flight again.');
       return;
     }
@@ -139,12 +193,15 @@ export class BookTickets {
     }).subscribe({
       next: ticket => {
         this.booking.set(false);
+        this.paymentStage.set('none');
         this.selectedFlight.set(null);
+        this.priceReady.set(false);
         this.booked.set(ticket);
         this.results.set(null);
       },
       error: (err: HttpErrorResponse) => {
         this.booking.set(false);
+        this.paymentStage.set('none');
         this.bookError.set(httpErrorMessage(err, 'Could not book the ticket. Please try again.'));
       },
     });

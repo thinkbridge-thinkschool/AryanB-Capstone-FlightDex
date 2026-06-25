@@ -9,4 +9,8 @@
     <Project Path="src/FlightDex.Flights.Infrastructure/FlightDex.Flights.Infrastructure.csproj" />
     <Project Path="src/FlightDex.SharedKernel/FlightDex.SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FlightDex.IntegrationTests/FlightDex.IntegrationTests.csproj" />
+    <Project Path="tests/FlightDex.UnitTests/FlightDex.UnitTests.csproj" />
+  </Folder>
 </Solution>
