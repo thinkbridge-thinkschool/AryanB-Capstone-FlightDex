@@ -12,6 +12,18 @@ import { httpErrorMessage } from '../shared/http-errors';
 
 const PAGE_SIZE = 30;
 
+/** localStorage key for the last-selected timetable airport, so a refresh keeps it. */
+const AIRPORT_KEY = 'flightdex.airport';
+
+/** Last-selected airport from localStorage, falling back to Pune (PNQ). */
+function loadAirport(): Airport {
+  try {
+    return resolveAirport(localStorage.getItem(AIRPORT_KEY) ?? '') ?? 'PNQ';
+  } catch {
+    return 'PNQ';
+  }
+}
+
 /** State for one result box (departures or arrivals). */
 interface BoxState {
   result: PagedResult<FlightListItem> | null;
@@ -40,9 +52,9 @@ export class Timetable {
   readonly airportFullName = airportFullName;
   readonly airportCity = airportCity;
 
-  // "Timetable for" airport selector. Default airport: Pune (PNQ).
+  // "Timetable for" airport selector. Persisted across refreshes; defaults to Pune (PNQ).
   readonly airportSearch = signal('');
-  readonly at = signal<Airport>('PNQ');
+  readonly at = signal<Airport>(loadAirport());
   readonly airportError = signal<string | null>(null);
   /** Whether the "Change Airport" dropdown is open. */
   readonly changeAirportOpen = signal(false);
@@ -114,6 +126,7 @@ export class Timetable {
     this.airportError.set(null);
     this.changeAirportOpen.set(false);
     this.at.set(code);
+    try { localStorage.setItem(AIRPORT_KEY, code); } catch { /* storage unavailable; selection just won't persist */ }
 
     // New airport: clear any per-box searches and reload both boxes from the top.
     this.departTo.set(''); this.departToTerm.set('');

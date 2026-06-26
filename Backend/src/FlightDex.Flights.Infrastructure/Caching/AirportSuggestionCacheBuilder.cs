@@ -7,9 +7,10 @@ namespace FlightDex.Flights.Infrastructure.Caching;
 
 /// <summary>
 /// The suggestion-extract "script": reads every distinct destination/origin airport
-/// (code, name, city) out of the timetable and (re)writes one row per airport into the
+/// (code, name, city) out of the timetable and writes one row per airport into the
 /// Locations table. Run once at startup, after the timetable has been seeded. Idempotent —
-/// it replaces the table contents each time.
+/// the timetable never changes, so it does nothing if the Locations table is already
+/// populated (mirroring the seeder), and only does the full extract on a fresh database.
 /// </summary>
 public sealed class AirportSuggestionCacheBuilder(
     FlightsDbContext dbContext,
@@ -17,6 +18,14 @@ public sealed class AirportSuggestionCacheBuilder(
 {
     public async Task RebuildAsync(CancellationToken cancellationToken = default)
     {
+        // The timetable is static, so once the Locations table is built it stays valid.
+        // Skip the distinct scan + rewrite on every subsequent startup.
+        if (await dbContext.Locations.AnyAsync(cancellationToken))
+        {
+            logger.LogInformation("Locations table already built; skipping airport suggestion extract.");
+            return;
+        }
+
         // Pull every distinct counterpart (destination/origin) airport triple in one round-trip.
         var triples = await dbContext.Flights
             .Select(f => new { f.CounterpartCode, f.CounterpartAirport, f.CounterpartCity })
@@ -33,8 +42,6 @@ public sealed class AirportSuggestionCacheBuilder(
                 t.CounterpartCity?.Trim() ?? string.Empty);
         }
 
-        // Replace the table contents so a re-run always reflects the current timetable.
-        await dbContext.Locations.ExecuteDeleteAsync(cancellationToken);
         dbContext.Locations.AddRange(byCode.Values);
         await dbContext.SaveChangesAsync(cancellationToken);
 

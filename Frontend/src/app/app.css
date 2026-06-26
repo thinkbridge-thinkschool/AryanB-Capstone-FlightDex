@@ -1,5 +1,16 @@
+/* App shell fills the viewport as a flex column: fixed-height topbar, then the routed
+   page fills the rest. The height is *definite* (not min-height) so a page that opts in —
+   the timetable, via its own flex:1 + overflow:hidden — can lock to the viewport and scroll
+   internally. Pages that don't opt in simply overflow this box and scroll the body as usual. */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
 /* Title bar — background image with a slight dark filter */
 .topbar {
+  flex: 0 0 auto;
   background-color: #1e3a8a; /* fallback until the image loads */
   background-image: url('/TitleBackground.jpg');
   background-size: cover;

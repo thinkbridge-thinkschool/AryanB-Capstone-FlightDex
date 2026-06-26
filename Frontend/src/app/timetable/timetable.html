@@ -72,17 +72,36 @@
               <p class="muted pad">No departures match.</p>
             } @else {
               <table class="flights">
+                <colgroup>
+                  <col class="c-time" />
+                  <col />
+                  <col class="c-flight" />
+                  <col />
+                  <col class="c-acode" />
+                  <col class="c-details" />
+                </colgroup>
                 <thead>
-                  <tr><th>Time</th><th>Flight</th><th>Airline</th><th>Destination</th><th></th></tr>
+                  <tr>
+                    <th rowspan="2">Time</th>
+                    <th rowspan="2">Airline</th>
+                    <th rowspan="2">Flight</th>
+                    <th colspan="2" class="group">Destination</th>
+                    <th rowspan="2" class="details-col" aria-label="Details"></th>
+                  </tr>
+                  <tr>
+                    <th class="sub-col">City</th>
+                    <th class="sub-col">Airport Code</th>
+                  </tr>
                 </thead>
                 <tbody>
                   @for (f of r.items; track f.flightCode + f.time) {
                     <tr class="clickable" (click)="openDetail(f.flightCode)">
                       <td class="time">{{ f.time }}</td>
-                      <td class="code">{{ f.flightCode }}</td>
                       <td>{{ f.airline }}</td>
-                      <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
-                      <td class="chev">&rsaquo;</td>
+                      <td class="code">{{ f.flightCode }}</td>
+                      <td>{{ f.city }}</td>
+                      <td class="code">{{ f.code }}</td>
+                      <td class="details"><span class="details-text">Show details</span> <span class="chev">&rsaquo;</span></td>
                     </tr>
                   }
                 </tbody>
@@ -141,17 +160,36 @@
               <p class="muted pad">No arrivals match.</p>
             } @else {
               <table class="flights">
+                <colgroup>
+                  <col class="c-time" />
+                  <col />
+                  <col class="c-flight" />
+                  <col />
+                  <col class="c-acode" />
+                  <col class="c-details" />
+                </colgroup>
                 <thead>
-                  <tr><th>Time</th><th>Flight</th><th>Airline</th><th>Origin</th><th></th></tr>
+                  <tr>
+                    <th rowspan="2">Time</th>
+                    <th rowspan="2">Airline</th>
+                    <th rowspan="2">Flight</th>
+                    <th colspan="2" class="group">Origin</th>
+                    <th rowspan="2" class="details-col" aria-label="Details"></th>
+                  </tr>
+                  <tr>
+                    <th class="sub-col">City</th>
+                    <th class="sub-col">Airport Code</th>
+                  </tr>
                 </thead>
                 <tbody>
                   @for (f of r.items; track f.flightCode + f.time) {
                     <tr class="clickable" (click)="openDetail(f.flightCode)">
                       <td class="time">{{ f.time }}</td>
-                      <td class="code">{{ f.flightCode }}</td>
                       <td>{{ f.airline }}</td>
-                      <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
-                      <td class="chev">&rsaquo;</td>
+                      <td class="code">{{ f.flightCode }}</td>
+                      <td>{{ f.city }}</td>
+                      <td class="code">{{ f.code }}</td>
+                      <td class="details"><span class="details-text">Show details</span> <span class="chev">&rsaquo;</span></td>
                     </tr>
                   }
                 </tbody>
