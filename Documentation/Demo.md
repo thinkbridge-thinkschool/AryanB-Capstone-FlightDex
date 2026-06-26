@@ -1,6 +1,6 @@
 # Demo
 
-## Demo Walkthrough Video: <video controls src="Demo-Video.mp4" title="Title"></video>
+## Demo Walkthrough Video: https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/blob/main/Documentation/Demo-Video.mp4
 
 ## 1. Timetable:
 ![](Snapshots/Timetable.png)

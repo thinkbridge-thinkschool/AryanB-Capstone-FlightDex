@@ -11,6 +11,7 @@ The frontend is built with Angular 22. It is a modern UI built with standalone c
 The deployment is done with Azure Container Apps, Azure Static Web Apps, Key Vault, EntraID, Azure SQL and Azure Deployment Stacks. Deployment is done using Biceps IaC with entire fullstack provisioned in 'azd up'. 
 
 # Demo - [Documentation/Demo.md](Documentation/Demo.md)
+# Demo VIdeo - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/blob/main/Documentation/Demo-Video.mp4
 
 # Detailed Documentation:
 - Design - [Documentation/Design.md](Documentation/Design.md)
