@@ -4,9 +4,11 @@
     <Project Path="src/FlightDex.Booking.Application/FlightDex.Booking.Application.csproj" />
     <Project Path="src/FlightDex.Booking.Domain/FlightDex.Booking.Domain.csproj" />
     <Project Path="src/FlightDex.Booking.Infrastructure/FlightDex.Booking.Infrastructure.csproj" />
+    <Project Path="src/FlightDex.Booking.Infrastructure.SqlServer/FlightDex.Booking.Infrastructure.SqlServer.csproj" />
     <Project Path="src/FlightDex.Flights.Application/FlightDex.Flights.Application.csproj" />
     <Project Path="src/FlightDex.Flights.Domain/FlightDex.Flights.Domain.csproj" />
     <Project Path="src/FlightDex.Flights.Infrastructure/FlightDex.Flights.Infrastructure.csproj" />
+    <Project Path="src/FlightDex.Flights.Infrastructure.SqlServer/FlightDex.Flights.Infrastructure.SqlServer.csproj" />
     <Project Path="src/FlightDex.SharedKernel/FlightDex.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/tests/">

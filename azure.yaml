@@ -1,0 +1,44 @@
+# azd configuration for FlightDex.
+# Provisions the Bicep in ./infra as an Azure Deployment Stack (stacks alpha feature), builds and
+# pushes the API container image to ACR, and deploys the Angular UI to the Static Web App.
+name: flightdex
+metadata:
+  template: flightdex@1.0.0
+
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+services:
+  # .NET API → Azure Container App. Image built from the existing Backend/Dockerfile.
+  api:
+    project: ./Backend
+    host: containerapp
+    language: docker
+    docker:
+      path: ./Dockerfile
+      context: ./
+      # Build the image in Azure Container Registry (no local Docker daemon required).
+      remoteBuild: true
+
+  # Angular UI → Azure Static Web App (Free). azd runs the npm build and uploads dist/.
+  web:
+    project: ./Frontend
+    host: staticwebapp
+    language: js
+    dist: dist/client/browser
+    hooks:
+      # After the build, bake the provisioned API URL into the static config the SPA reads at
+      # startup (config.json), so the cross-origin API calls target the Container App.
+      predeploy:
+        posix:
+          shell: sh
+          run: |
+            echo "{\"apiBaseUrl\":\"$API_BASE_URL\"}" > ./dist/client/browser/config.json
+            echo "Wrote config.json -> $API_BASE_URL"
+        windows:
+          shell: pwsh
+          run: |
+            Set-Content -Path ./dist/client/browser/config.json -Value ('{{"apiBaseUrl":"{0}"}}' -f $env:API_BASE_URL)
+            Write-Host "Wrote config.json -> $env:API_BASE_URL"

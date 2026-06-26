@@ -23,8 +23,23 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException(
                 $"Connection string '{ConnectionStringName}' is not configured.");
 
+        // SQLite locally (default); Azure SQL when Database:Provider=SqlServer. Migrations for
+        // each provider live in separate assemblies (see FlightDex.Flights.Infrastructure.SqlServer).
+        var useSqlServer = string.Equals(
+            configuration["Database:Provider"], "SqlServer", StringComparison.OrdinalIgnoreCase);
+
         services.AddDbContext<FlightsDbContext>(options =>
-            options.UseSqlite(connectionString));
+        {
+            if (useSqlServer)
+            {
+                options.UseSqlServer(connectionString, sql =>
+                    sql.MigrationsAssembly("FlightDex.Flights.Infrastructure.SqlServer"));
+            }
+            else
+            {
+                options.UseSqlite(connectionString);
+            }
+        });
 
         services.AddMemoryCache(); // backs the static page-count cache in FlightRepository
         services.AddScoped<IFlightRepository, FlightRepository>();

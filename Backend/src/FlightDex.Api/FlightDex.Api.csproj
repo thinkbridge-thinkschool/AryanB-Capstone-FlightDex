@@ -21,6 +21,10 @@
     <ProjectReference Include="..\FlightDex.Booking.Infrastructure\FlightDex.Booking.Infrastructure.csproj" />
     <ProjectReference Include="..\FlightDex.Booking.Application\FlightDex.Booking.Application.csproj" />
     <ProjectReference Include="..\FlightDex.SharedKernel\FlightDex.SharedKernel.csproj" />
+    <!-- Azure SQL migration assemblies (loaded at runtime via MigrationsAssembly when
+         Database:Provider=SqlServer). Referenced so they ship in the published output. -->
+    <ProjectReference Include="..\FlightDex.Flights.Infrastructure.SqlServer\FlightDex.Flights.Infrastructure.SqlServer.csproj" />
+    <ProjectReference Include="..\FlightDex.Booking.Infrastructure.SqlServer\FlightDex.Booking.Infrastructure.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>

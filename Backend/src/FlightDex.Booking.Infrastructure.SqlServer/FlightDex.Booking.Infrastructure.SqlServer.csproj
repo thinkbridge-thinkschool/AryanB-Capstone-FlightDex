@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Holds the SQL Server (Azure SQL) migrations for BookingDbContext, in a separate assembly
+       from the SQLite migrations so EF doesn't see two ModelSnapshots for one context.
+       Selected at runtime via MigrationsAssembly() when Database:Provider=SqlServer. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FlightDex.Booking.Infrastructure\FlightDex.Booking.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

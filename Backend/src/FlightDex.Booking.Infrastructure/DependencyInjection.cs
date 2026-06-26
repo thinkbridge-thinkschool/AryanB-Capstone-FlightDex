@@ -26,7 +26,26 @@ public static class DependencyInjection
             ?? throw new InvalidOperationException(
                 $"Connection string '{ConnectionStringName}' is not configured.");
 
-        services.AddDbContext<BookingDbContext>(options => options.UseSqlite(connectionString));
+        // SQLite locally (default); Azure SQL when Database:Provider=SqlServer. A dedicated
+        // migrations-history table lets Booking and Flights safely share one Azure SQL database.
+        var useSqlServer = string.Equals(
+            configuration["Database:Provider"], "SqlServer", StringComparison.OrdinalIgnoreCase);
+
+        services.AddDbContext<BookingDbContext>(options =>
+        {
+            if (useSqlServer)
+            {
+                options.UseSqlServer(connectionString, sql =>
+                {
+                    sql.MigrationsAssembly("FlightDex.Booking.Infrastructure.SqlServer");
+                    sql.MigrationsHistoryTable("__BookingMigrationsHistory");
+                });
+            }
+            else
+            {
+                options.UseSqlite(connectionString);
+            }
+        });
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
 

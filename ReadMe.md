@@ -1,6 +1,24 @@
-> Reinitialized the main branch using hard reset for cleaner commits for Day 29 Task. Branches and Solutions of all pieces remain intact in their branches. 
+# FlightDex - Flight Timetable and Ticket Booking Application
 
-# Solutions:
+## Live URL: https://lively-ground-0f1850200.7.azurestaticapps.net/
+
+Flightdex is Flight Timetable and Ticket Booking Application made with .NET 10 and Angular 22. It enables the user to view the timetable of flights operating from a selected Airport, search flights and book tickets. The project is designed in vertical slices.
+
+The backend is a .NET 10 modular monolith with clean-onion architecture, CQRS and Outbox Pattern. The main API flight fetches paginated data for the timetable and enables searching and filtering flights. The two supporting APIs airports and ticket enable search suggestions and ticket booking. 
+
+The frontend is built with Angular 22. It is a modern UI built with standalone components, signals-first reactivity and new control-flow syntax. The highlight being Timetable being a complete single-screen layout dashboard. 
+
+The deployment is done with Azure Container Apps, Azure Static Web Apps, Key Vault, EntraID, Azure SQL and Azure Deployment Stacks. Deployment is done using Biceps IaC with entire fullstack provisioned in 'azd up'. 
+
+# Demo - [Documentation/Demo.md](Documentation/Demo.md)
+
+# Detailed Documentation:
+- Design - [Documentation/Design.md](Documentation/Design.md)
+- Strucucture - [Documentation/Structure.md](Documentation/Structure.md)
+- Features - [Documentation/Features.md](Documentation/Features.md)
+- Flow - [Documentation/Flow.md](Documentation/Flow.md) 
+
+# Piece Solutions:
 - Solutions upto Day 29 in their respective brances:
     - Day 22 Piece 2 - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/tree/D22P2_CapstoneKickoff_Design_Scaffold 
     - Day 23 Piece 1 - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/tree/D23P1---Bicep-IaC

@@ -27,10 +27,24 @@ public sealed class BookingDbContextFactory : IDesignTimeDbContextFactory<Bookin
             ?? throw new InvalidOperationException(
                 $"Connection string '{DependencyInjection.ConnectionStringName}' is not configured.");
 
-        var options = new DbContextOptionsBuilder<BookingDbContext>()
-            .UseSqlite(connectionString)
-            .Options;
+        // Set EF_PROVIDER=SqlServer to author the Azure SQL migrations (in the .SqlServer project);
+        // the default authors the SQLite migrations that live in this project. `migrations add`
+        // never opens a connection, so the connection string value is irrelevant here.
+        var builder = new DbContextOptionsBuilder<BookingDbContext>();
+        if (string.Equals(
+                Environment.GetEnvironmentVariable("EF_PROVIDER"), "SqlServer", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.UseSqlServer(connectionString, sql =>
+            {
+                sql.MigrationsAssembly("FlightDex.Booking.Infrastructure.SqlServer");
+                sql.MigrationsHistoryTable("__BookingMigrationsHistory");
+            });
+        }
+        else
+        {
+            builder.UseSqlite(connectionString);
+        }
 
-        return new BookingDbContext(options);
+        return new BookingDbContext(builder.Options);
     }
 }

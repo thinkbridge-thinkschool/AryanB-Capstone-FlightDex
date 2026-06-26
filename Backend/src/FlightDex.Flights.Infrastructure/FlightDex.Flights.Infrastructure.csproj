@@ -12,6 +12,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <!-- Azure deployment uses Azure SQL; the provider is chosen at runtime (Database:Provider). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
     <!-- Security: override EF's transitive SQLitePCLRaw 2.1.11 (GHSA-2m69-gcr7-jv3q, High)
          with the patched 3.0.x native bundle. See Documentation/Day31P1_Solution.md. -->
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
