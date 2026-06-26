@@ -84,8 +84,8 @@ export class Login {
   }
 
   submitRegister(): void {
-    if (this.regPassword().length < 6) {
-      this.error.set('Password must be at least 6 characters.');
+    if (!this.isValidPassword(this.regPassword())) {
+      this.error.set('Password must be at least 8 characters and include a lowercase letter, an uppercase letter and a number.');
       return;
     }
     if (this.regPassword() !== this.confirmPassword()) {
@@ -102,6 +102,11 @@ export class Login {
       isLawEnforcementOrMilitary: this.isLawEnforcementOrMilitary(),
       password: this.regPassword(),
     }));
+  }
+
+  /** At least 8 characters, containing a lowercase letter, an uppercase letter and a digit. */
+  private isValidPassword(pw: string): boolean {
+    return pw.length >= 8 && /[a-z]/.test(pw) && /[A-Z]/.test(pw) && /[0-9]/.test(pw);
   }
 
   // ---- Shared submit handling -------------------------------------------

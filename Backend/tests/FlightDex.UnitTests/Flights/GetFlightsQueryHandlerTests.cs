@@ -19,7 +19,7 @@ public sealed class GetFlightsQueryHandlerTests
     public async Task Handler_passes_the_spec_through_to_the_repository_unchanged()
     {
         var spec = new FlightQuerySpec(
-            FlightDirection.Arrival, "BOM", "Delhi", new TimeOnly(8, 0), new TimeOnly(12, 0), 2, 15);
+            FlightDirection.Arrival, "BOM", "Delhi", null, new TimeOnly(8, 0), new TimeOnly(12, 0), 2, 15);
         _repository.GetPagedAsync(spec, Arg.Any<CancellationToken>())
             .Returns(new PagedResult<Flight>([], 2, 15, 0));
 
@@ -32,7 +32,7 @@ public sealed class GetFlightsQueryHandlerTests
     [Fact]
     public async Task Handler_maps_domain_flights_to_list_items_and_preserves_paging_metadata()
     {
-        var spec = new FlightQuerySpec(FlightDirection.Departure, "BLR", null, null, null, 1, 30);
+        var spec = new FlightQuerySpec(FlightDirection.Departure, "BLR", null, null, null, null, 1, 30);
         _repository.GetPagedAsync(spec, Arg.Any<CancellationToken>())
             .Returns(new PagedResult<Flight>([Flight("AI501", 8), Flight("AI502", 9)], 1, 30, 57));
 

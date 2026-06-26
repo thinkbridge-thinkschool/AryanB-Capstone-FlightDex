@@ -40,8 +40,9 @@ public sealed class FlightRepositoryTests : IDisposable
     }
 
     private static FlightQuerySpec Spec(
-        string? counterpart = null, TimeOnly? after = null, TimeOnly? before = null, int page = 1, int pageSize = 30) =>
-        new(FlightDirection.Departure, "BLR", counterpart, after, before, page, pageSize);
+        string? counterpart = null, string? flightCode = null, TimeOnly? after = null, TimeOnly? before = null,
+        int page = 1, int pageSize = 30) =>
+        new(FlightDirection.Departure, "BLR", counterpart, flightCode, after, before, page, pageSize);
 
     [Fact]
     public async Task Filters_by_direction_and_airport_and_orders_by_time()

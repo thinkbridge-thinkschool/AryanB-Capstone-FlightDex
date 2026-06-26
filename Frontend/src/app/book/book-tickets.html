@@ -65,35 +65,28 @@
       @if (flights.length === 0) {
         <p class="muted pad">No flights match. Try a different destination.</p>
       } @else {
+        <p class="results-title">Flights from {{ searchedOriginLabel() }}</p>
         <div class="table-scroll">
           <table class="route-table">
             <thead>
               <tr>
-                <th rowspan="2">Time</th>
-                <th colspan="3" class="group">From</th>
-                <th colspan="3" class="group">To</th>
-                <th rowspan="2">Airline</th>
-                <th rowspan="2">Flight</th>
-                <th rowspan="2" class="buy-col"></th>
-              </tr>
-              <tr>
-                <th>City</th><th>Airport</th><th>Code</th>
-                <th>City</th><th>Airport</th><th>Code</th>
+                <th>Time</th>
+                <th>Airline</th>
+                <th>Flight</th>
+                <th>Destination</th>
+                <th class="act-col"></th>
+                <th class="act-col"></th>
               </tr>
             </thead>
             <tbody>
               @for (f of flights; track f.flightCode + f.time) {
                 <tr>
                   <td class="time">{{ f.time }}</td>
-                  <td>{{ airportCity(searchedOrigin()!) }}</td>
-                  <td class="airport">{{ airportFullName(searchedOrigin()!) }}</td>
-                  <td class="code">{{ searchedOrigin() }}</td>
-                  <td>{{ f.city }}</td>
-                  <td class="airport">{{ f.airport }}</td>
-                  <td class="code">{{ f.code }}</td>
                   <td>{{ f.airline }}</td>
                   <td class="code">{{ f.flightCode }}</td>
-                  <td><button type="button" class="buy-btn" (click)="buyFlight(f)">Buy</button></td>
+                  <td>{{ f.city }} <span class="muted">({{ f.code }})</span></td>
+                  <td><button type="button" class="details-btn" (click)="openDetail(f.flightCode)">Details</button></td>
+                  <td><button type="button" class="book-row-btn" (click)="bookFlight(f)">Book</button></td>
                 </tr>
               }
             </tbody>
@@ -103,72 +96,103 @@
     </section>
   }
 
-  <!-- Success -->
-  @if (booked(); as t) {
-    <section class="success confirm">
-      <h2>Ticket booked! 🎫</h2>
-      <p>
-        <strong>{{ t.originCity }} ({{ t.originCode }})</strong> →
-        <strong>{{ t.destinationCity }} ({{ t.destinationCode }})</strong>
-        on <strong>{{ t.date }}</strong> at <strong>{{ t.time }}</strong>.
-      </p>
-      <p class="muted">Passenger: {{ t.firstName }} {{ t.lastName }} · Ticket #{{ t.ticketId }}</p>
-      <a class="btn ghost" routerLink="/mytickets">View My Tickets</a>
-    </section>
-  }
 </main>
 
-<!-- Confirmation box + fake payment gateway -->
-@if (selectedFlight(); as f) {
-  @if (paymentStage() === 'none') {
-    <div class="modal-backdrop" (click)="dismissConfirm()">
-      <div class="confirm-box" (click)="$event.stopPropagation()">
-        <h3>Confirm your booking</h3>
-
-        <div class="route-block">
-          <div class="endpoint">
-            <span class="ep-code">{{ searchedOrigin() }}</span>
-            <span class="muted">Origin</span>
-          </div>
-          <div class="arrow">✈</div>
-          <div class="endpoint">
-            <span class="ep-code">{{ f.code }}</span>
-            <span class="muted">{{ f.city }}</span>
-          </div>
-        </div>
-
-        <dl class="facts">
-          <dt>Flight</dt><dd>{{ f.flightCode }} · {{ f.airline }}</dd>
-          <dt>Destination</dt><dd>{{ f.airport }}</dd>
-          <dt>Date</dt><dd>{{ date() }}</dd>
-          <dt>Time</dt><dd>{{ f.time }}</dd>
-          <dt>Passenger</dt><dd>{{ passengerName() }}</dd>
-          <dt>Fare</dt><dd class="fare">{{ priceLoading() ? 'Fetching price…' : priceLabel }}</dd>
-        </dl>
-
-        @if (bookError()) { <p class="error">{{ bookError() }}</p> }
-
-        <div class="confirm-actions">
-          <button class="btn" [disabled]="priceLoading() || !priceReady()" (click)="proceedToPayment()">
-            {{ priceLoading() ? 'Fetching price…' : 'Proceed to Payment' }}
-          </button>
-          <button class="btn ghost" (click)="dismissConfirm()">Back</button>
-        </div>
+<!-- Booking confirmation: review the details before proceeding. -->
+@if (bookStage() === 'confirm' && selectedFlight(); as f) {
+  <div class="modal-backdrop" (click)="cancelBook()">
+    <div class="confirm-box" (click)="$event.stopPropagation()">
+      <h3>Confirm the details for your booking:</h3>
+      <dl class="facts">
+        <dt>From</dt><dd>{{ airportCity(searchedOrigin()!) }} ({{ searchedOrigin() }})</dd>
+        <dt>To</dt><dd>{{ f.city }} ({{ f.code }})</dd>
+        <dt>Flight</dt><dd>{{ f.flightCode }} · {{ f.airline }}</dd>
+        <dt>Date</dt><dd>{{ date() }}</dd>
+        <dt>Time</dt><dd>{{ f.time }}</dd>
+        <dt>Passenger</dt><dd>{{ passengerName() }}</dd>
+      </dl>
+      <div class="confirm-actions">
+        <button type="button" class="btn" (click)="proceedBooking()">Proceed</button>
+        <button type="button" class="btn ghost" (click)="cancelBook()">Cancel</button>
       </div>
     </div>
-  } @else {
-    <div class="modal-backdrop">
-      <div class="gateway-box">
-        @if (paymentStage() === 'processing') {
-          <div class="spinner"></div>
-          <h3>Processing payment…</h3>
-          <p class="muted">Paying {{ priceLabel }} — please don't close this window.</p>
-        } @else {
-          <div class="pay-check">✓</div>
-          <h3>Payment Completed</h3>
-          <p class="muted">{{ priceLabel }} paid. Booking your ticket…</p>
+  </div>
+}
+
+<!-- Fake booking interface: redirect → confirming → confirmed (always confirmed). -->
+@if (bookStage() === 'redirect' || bookStage() === 'confirming' || bookStage() === 'confirmed') {
+  <div class="modal-backdrop">
+    <div class="gateway-box">
+      @if (bookStage() === 'redirect') {
+        <div class="spinner"></div>
+        <h3>You will be redirected to the Airline Website soon</h3>
+        <p class="muted">Please wait…</p>
+      } @else if (bookStage() === 'confirming') {
+        <div class="spinner"></div>
+        <h3>Confirming Booking</h3>
+        <p class="muted">Checking with the airline…</p>
+      } @else {
+        <div class="pay-check">✓</div>
+        <h3>Booking Confirmed</h3>
+        @if (booked(); as t) {
+          <p class="muted">
+            {{ t.originCity }} ({{ t.originCode }}) → {{ t.destinationCity }} ({{ t.destinationCode }})
+            · {{ t.date }} at {{ t.time }}
+          </p>
         }
-      </div>
+        <div class="confirm-actions center">
+          <a class="btn" routerLink="/mytickets">View My Tickets</a>
+          <button type="button" class="btn ghost" (click)="closeBook()">Close</button>
+        </div>
+      }
     </div>
-  }
+  </div>
+}
+
+<!-- Flight detail pop-up (same shape as the Timetable details view) -->
+@if (detailLoading() || detail()) {
+  <div class="modal-backdrop" (click)="closeDetail()">
+    <div class="modal detail-modal" (click)="$event.stopPropagation()">
+      @if (detailLoading()) {
+        <p class="muted">Loading details…</p>
+      } @else if (detail(); as d) {
+        <button type="button" class="close detail-close" (click)="closeDetail()" aria-label="Close">&times;</button>
+
+        <h3 class="detail-title">Details</h3>
+
+        <div class="entries">
+          <section class="entry">
+            <h4 class="entry-head">Flight</h4>
+            <div class="sub"><span class="sub-label">Airlines:</span> <span class="sub-data">{{ d.airline }}</span></div>
+            <div class="sub"><span class="sub-label">Flight Code:</span> <span class="sub-data">{{ d.flightCode }}</span></div>
+            <div class="sub"><span class="sub-label">Airline Code:</span> <span class="sub-data">{{ d.airlineCode }}</span></div>
+          </section>
+
+          <section class="entry">
+            <h4 class="entry-head">Time</h4>
+            <div class="sub"><span class="sub-data">{{ formatTime(d.time) }}</span></div>
+          </section>
+
+          <section class="entry">
+            <h4 class="entry-head">{{ d.direction === 'Departure' ? 'Departure From' : 'Arrival At' }}</h4>
+            <div class="sub"><span class="sub-label">Airport Code:</span> <span class="sub-data">{{ d.airport }}</span></div>
+            <div class="sub"><span class="sub-label">Airport Name:</span> <span class="sub-data">{{ airportFullName(d.airport) }}</span></div>
+            <div class="sub"><span class="sub-label">City:</span> <span class="sub-data">{{ airportCity(d.airport) }}</span></div>
+          </section>
+
+          <section class="entry">
+            <h4 class="entry-head">{{ d.direction === 'Departure' ? 'Destination' : 'Origin' }}</h4>
+            <div class="sub"><span class="sub-label">Airport Code:</span> <span class="sub-data">{{ d.counterpartCode }}</span></div>
+            <div class="sub"><span class="sub-label">Airport Name:</span> <span class="sub-data">{{ d.counterpartAirport }}</span></div>
+            <div class="sub"><span class="sub-label">City:</span> <span class="sub-data">{{ d.counterpartCity }}</span></div>
+          </section>
+
+          <section class="entry">
+            <h4 class="entry-head">Duration</h4>
+            <div class="sub"><span class="sub-data">{{ d.duration }}</span></div>
+          </section>
+        </div>
+      }
+    </div>
+  </div>
 }

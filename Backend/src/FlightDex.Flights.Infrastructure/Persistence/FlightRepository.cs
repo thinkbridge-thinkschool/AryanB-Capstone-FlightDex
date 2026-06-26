@@ -15,7 +15,7 @@ internal sealed class FlightRepository(FlightsDbContext dbContext, IMemoryCache 
         // always yields the same page. Cache the whole result — on a repeat request we skip
         // SQLite (both the COUNT and the items query) and the EF materialisation entirely.
         var cacheKey = $"flight-page:{spec.Direction}:{spec.Airport}:{spec.CounterpartTerm}:" +
-                       $"{spec.TimeAfter}:{spec.TimeBefore}:{spec.Page}:{spec.PageSize}";
+                       $"{spec.FlightCode}:{spec.TimeAfter}:{spec.TimeBefore}:{spec.Page}:{spec.PageSize}";
         if (cache.TryGetValue(cacheKey, out PagedResult<Flight>? cached) && cached is not null)
             return cached;
 
@@ -33,6 +33,13 @@ internal sealed class FlightRepository(FlightsDbContext dbContext, IMemoryCache 
             var term = spec.CounterpartTerm.Trim();
             query = query.Where(f =>
                 f.CounterpartCode == term || f.CounterpartCity == term || f.CounterpartAirport == term);
+        }
+
+        if (!string.IsNullOrWhiteSpace(spec.FlightCode))
+        {
+            // Exact match on the flight code (case-insensitive via the column collation).
+            var code = spec.FlightCode.Trim();
+            query = query.Where(f => f.FlightCode == code);
         }
 
         if (spec.TimeAfter is { } after)

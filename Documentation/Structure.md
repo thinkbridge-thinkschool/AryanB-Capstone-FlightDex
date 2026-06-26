@@ -1,151 +1,136 @@
 # FlightDex — Solution Structure
 
+A modular monolith: one ASP.NET Core host composing two vertical-slice modules (Flights,
+Booking) over a shared CQRS kernel, plus an Angular front end. Each module keeps its own
+Domain / Application / Infrastructure projects and its own SQLite database.
+
 ```
 FlightDex/
-├── FlightDex.sln                                      # Solution wiring all module + host + test projects
-├── Directory.Build.props                              # Shared MSBuild settings for every project
-├── Design.md                                          # One-page design: contexts, aggregates, async flows
-├── Structure.md                                       # This file: folder and file structure
-├── D22P2_Solution.md                                  # Solution of Day 22 Piece 2
+├── ReadMe.md                                         # Project overview
+├── docker-compose.yml                                # api + web services; SQLite on a named volume
 │
-├── diagrams/
-│   ├── contexts.mmd                                   # Section 1 mermaid: bounded-context map
-│   ├── aggregates.mmd                                 # Section 2 mermaid: Flight aggregate + references
-│   └── async-flows.mmd                                # Section 3 mermaid: event refresh + read path
+├── Documentation/
+│   ├── Design.md                                     # One-page design: modules, aggregates, flows
+│   ├── Structure.md                                  # This file: folder and file structure
+│   ├── Flow.md                                       # Every UI field/operation → API → query/command
+│   ├── BuildPlan.md                                  # Build roadmap
+│   ├── how_to_run.md                                 # Local + Docker run instructions
+│   ├── ADRs/                                          # Architecture decision records
+│   ├── Solutions/                                     # Per-day exercise solutions
+│   └── Snapshots/                                     # UI + CI screenshots
 │
-└── Backend/
-    ├── src/
-    │   ├── Bootstrap/
-    │   │   └── FlightDex.Api/                          # Web host and composition root
-    │   │       ├── FlightDex.Api.csproj
-    │   │       ├── Program.cs                          # App entry point; wires modules into the host
-    │   │       ├── appsettings.json                   # Host configuration
-    │   │       ├── Endpoints/
-    │   │       │   └── FlightEndpoints.cs              # Maps /flight and /flight/{flightId} routes
-    │   │       └── Modules/
-    │   │           └── ModuleRegistration.cs          # Registers each bounded context's services
-    │   │
-    │   ├── Shared/
-    │   │   ├── FlightDex.SharedKernel/                 # Cross-context domain primitives
-    │   │   │   ├── FlightDex.SharedKernel.csproj
-    │   │   │   ├── Domain/
-    │   │   │   │   ├── AggregateRoot.cs                # Base type for aggregate roots
-    │   │   │   │   ├── Entity.cs                       # Base type for entities
-    │   │   │   │   ├── ValueObject.cs                  # Base type for value objects
-    │   │   │   │   └── IDomainEvent.cs                 # Marker for domain events
-    │   │   │   ├── Pagination/
-    │   │   │   │   ├── PagedRequest.cs                 # Page number/size input contract
-    │   │   │   │   └── PagedResult.cs                  # Generic paginated response envelope
-    │   │   │   └── Abstractions/
-    │   │   │       └── IUnitOfWork.cs                  # Transaction boundary abstraction
-    │   │   │
-    │   │   └── FlightDex.IntegrationEvents/            # Public event contracts between contexts
-    │   │       ├── FlightDex.IntegrationEvents.csproj
-    │   │       ├── IEventBus.cs                        # In-process event bus abstraction
-    │   │       ├── IIntegrationEvent.cs                # Marker for integration events
-    │   │       ├── FlightUpsertedEvent.cs              # Raised when a flight is created/updated
-    │   │       ├── RouteChangedEvent.cs                # Raised when a route's endpoints change
-    │   │       └── LocationChangedEvent.cs             # Raised when a location's details change
-    │   │
-    │   └── Modules/
-    │       ├── Timetable/                              # CORE context: owns Flight + FlightDetails
-    │       │   ├── FlightDex.Timetable.Domain/
-    │       │   │   ├── FlightDex.Timetable.Domain.csproj
-    │       │   │   ├── Flight/
-    │       │   │   │   ├── Flight.cs                   # Flight aggregate root
-    │       │   │   │   ├── FlightDetails.cs            # Detail entity within the Flight aggregate
-    │       │   │   │   ├── FlightId.cs                 # Strongly-typed flight identifier
-    │       │   │   │   ├── SeatingPlan.cs              # Value object: seats by class
-    │       │   │   │   ├── FlightSchedule.cs           # Value object: departure/arrival timestamps
-    │       │   │   │   └── IFlightRepository.cs        # Persistence port for the Flight aggregate
-    │       │   │   └── ReadModels/
-    │       │   │       └── FlightView.cs               # Denormalized dashboard/detail read model
-    │       │   ├── FlightDex.Timetable.Application/
-    │       │   │   ├── FlightDex.Timetable.Application.csproj
-    │       │   │   ├── Queries/
-    │       │   │   │   ├── GetFlightTimetable/
-    │       │   │   │   │   ├── GetFlightTimetableQuery.cs    # Paginated timetable query input
-    │       │   │   │   │   └── GetFlightTimetableHandler.cs  # Returns a page of flight summaries
-    │       │   │   │   └── GetFlightDetails/
-    │       │   │   │       ├── GetFlightDetailsQuery.cs      # Single-flight detail query input
-    │       │   │   │       └── GetFlightDetailsHandler.cs    # Returns enriched flight details
-    │       │   │   ├── Contracts/
-    │       │   │   │   ├── FlightSummaryDto.cs         # Timetable row shape
-    │       │   │   │   └── FlightDetailsDto.cs         # Expanded detail panel shape
-    │       │   │   ├── Enrichment/
-    │       │   │   │   ├── IRouteLookup.cs             # Port to resolve RouteID -> airport codes
-    │       │   │   │   ├── ILocationLookup.cs          # Port to resolve airport code -> city/state/country
-    │       │   │   │   └── FlightViewProjector.cs      # Builds FlightView from flight + route + location
-    │       │   │   └── EventHandlers/
-    │       │   │       ├── RouteChangedHandler.cs      # Refreshes FlightViews on route change
-    │       │   │       └── LocationChangedHandler.cs   # Refreshes FlightViews on location change
-    │       │   └── FlightDex.Timetable.Infrastructure/
-    │       │       ├── FlightDex.Timetable.Infrastructure.csproj
-    │       │       ├── Persistence/
-    │       │       │   ├── TimetableDbContext.cs       # EF Core context for Flight/FlightDetails/FlightView
-    │       │       │   ├── FlightRepository.cs         # IFlightRepository implementation
-    │       │       │   └── Configurations/
-    │       │       │       ├── FlightConfiguration.cs        # Flight table mapping
-    │       │       │       ├── FlightDetailsConfiguration.cs # FlightDetails table mapping
-    │       │       │       └── FlightViewConfiguration.cs    # FlightView read-model mapping
-    │       │       ├── Lookups/
-    │       │       │   ├── RouteLookupAdapter.cs       # IRouteLookup over the Routing context
-    │       │       │   └── LocationLookupAdapter.cs    # ILocationLookup over the Locations context
-    │       │       └── TimetableModule.cs              # DI registration for the Timetable context
-    │       │
-    │       ├── Routing/                                # Owns Routes (RouteID -> from/to airport codes)
-    │       │   ├── FlightDex.Routing.Domain/
-    │       │   │   ├── FlightDex.Routing.Domain.csproj
-    │       │   │   ├── Route.cs                        # Route aggregate root
-    │       │   │   ├── RouteId.cs                      # Strongly-typed route identifier
-    │       │   │   ├── AirportCode.cs                  # Value object for airport code
-    │       │   │   └── IRouteRepository.cs             # Persistence port for routes
-    │       │   ├── FlightDex.Routing.Application/
-    │       │   │   ├── FlightDex.Routing.Application.csproj
-    │       │   │   ├── Queries/
-    │       │   │   │   └── GetRouteById/
-    │       │   │   │       ├── GetRouteByIdQuery.cs    # Route lookup input
-    │       │   │   │       └── GetRouteByIdHandler.cs  # Returns route endpoints
-    │       │   │   └── Contracts/
-    │       │   │       └── RouteDto.cs                 # Route endpoint shape exposed to other contexts
-    │       │   └── FlightDex.Routing.Infrastructure/
-    │       │       ├── FlightDex.Routing.Infrastructure.csproj
-    │       │       ├── Persistence/
-    │       │       │   ├── RoutingDbContext.cs         # EF Core context for Routes
-    │       │       │   ├── RouteRepository.cs          # IRouteRepository implementation
-    │       │       │   └── Configurations/
-    │       │       │       └── RouteConfiguration.cs   # Routes table mapping
-    │       │       └── RoutingModule.cs                # DI registration for the Routing context
-    │       │
-    │       └── Locations/                              # Owns Locations (airport code -> city/state/country)
-    │           ├── FlightDex.Locations.Domain/
-    │           │   ├── FlightDex.Locations.Domain.csproj
-    │           │   ├── Location.cs                     # Location aggregate root
-    │           │   ├── AirportCode.cs                  # Strongly-typed airport code identifier
-    │           │   ├── Address.cs                      # Value object: city/state/country
-    │           │   └── ILocationRepository.cs          # Persistence port for locations
-    │           ├── FlightDex.Locations.Application/
-    │           │   ├── FlightDex.Locations.Application.csproj
-    │           │   ├── Queries/
-    │           │   │   └── GetLocationByCode/
-    │           │   │       ├── GetLocationByCodeQuery.cs    # Location lookup input
-    │           │   │       └── GetLocationByCodeHandler.cs  # Returns location details
-    │           │   └── Contracts/
-    │           │       └── LocationDto.cs              # Location detail shape exposed to other contexts
-    │           └── FlightDex.Locations.Infrastructure/
-    │               ├── FlightDex.Locations.Infrastructure.csproj
-    │               ├── Persistence/
-    │               │   ├── LocationsDbContext.cs       # EF Core context for Locations
-    │               │   ├── LocationRepository.cs       # ILocationRepository implementation
-    │               │   └── Configurations/
-    │               │       └── LocationConfiguration.cs # Locations table mapping
-    │               └── LocationsModule.cs              # DI registration for the Locations context
-    │
-    └── tests/
-        ├── FlightDex.Timetable.Tests/                  # Tests for the Timetable context
-        │   └── FlightDex.Timetable.Tests.csproj
-        ├── FlightDex.Routing.Tests/                    # Tests for the Routing context
-        │   └── FlightDex.Routing.Tests.csproj
-        └── FlightDex.Locations.Tests/                  # Tests for the Locations context
-            └── FlightDex.Locations.Tests.csproj
+├── Backend/
+│   ├── FlightDex.slnx                                # Solution wiring host + modules + tests
+│   ├── Dockerfile                                    # Builds + publishes the API image
+│   ├── src/
+│   │   ├── FlightDex.Api/                             # Web host and composition root
+│   │   │   ├── Program.cs                             # Wires CQRS + both modules; migrate→seed→extract; JWT/CORS
+│   │   │   ├── appsettings.json                       # Connection strings (FlightDex, Booking), Jwt, Cors
+│   │   │   ├── ClaimsPrincipalExtensions.cs           # User.GetUserId() from the bearer token
+│   │   │   ├── Contracts/
+│   │   │   │   ├── AuthContracts.cs                   # RegisterRequest / LoginRequest bodies
+│   │   │   │   └── TicketContracts.cs                 # BookTicketRequest body
+│   │   │   └── Controllers/
+│   │   │       ├── FlightController.cs                # GET /flight , GET /flight/{flightCode}
+│   │   │       ├── AirportController.cs               # GET /airports/suggestions
+│   │   │       ├── AuthController.cs                  # POST /auth/register , /auth/login
+│   │   │       └── TicketController.cs                # POST/GET/DELETE /ticket  ([Authorize])
+│   │   │
+│   │   ├── FlightDex.SharedKernel/                    # Cross-module primitives (no domain logic)
+│   │   │   ├── Cqrs/
+│   │   │   │   ├── ICommand.cs / IQuery.cs            # Marker contracts for commands / queries
+│   │   │   │   ├── ICommandHandler.cs / IQueryHandler.cs
+│   │   │   │   ├── ICommandDispatcher.cs / IQueryDispatcher.cs
+│   │   │   │   ├── CommandDispatcher.cs / QueryDispatcher.cs   # Resolve + invoke the handler
+│   │   │   │   └── SharedKernelServiceCollectionExtensions.cs # AddCqrs()
+│   │   │   └── Paging/
+│   │   │       └── PagedResult.cs                     # Generic page envelope (+ Total/HasNext/...)
+│   │   │
+│   │   ├── FlightDex.Flights.Domain/                  # Flights: domain
+│   │   │   ├── Flight.cs                              # Unified timetable row (departures + arrivals)
+│   │   │   ├── FlightDirection.cs                     # Departure | Arrival
+│   │   │   └── Location.cs                            # Derived airport-suggestion row
+│   │   ├── FlightDex.Flights.Application/             # Flights: use cases (read-only)
+│   │   │   ├── DependencyInjection.cs                 # AddFlightsApplication()
+│   │   │   ├── Flights.cs                             # ServedAirports (BLR/BOM/PNQ/LON/DBX)
+│   │   │   ├── Abstractions/
+│   │   │   │   ├── IFlightRepository.cs               # Timetable read port
+│   │   │   │   ├── FlightQuerySpec.cs                 # Direction/airport/term/code/time/page filter set
+│   │   │   │   ├── IAirportSuggestionCache.cs         # Suggestion read port
+│   │   │   │   └── AirportSuggestion.cs               # (Code, Name, City)
+│   │   │   ├── Dtos/
+│   │   │   │   ├── FlightListItem.cs                  # Timetable row shape (FromDomain)
+│   │   │   │   └── FlightDetail.cs                    # Detail-modal shape (FromDomain)
+│   │   │   └── Queries/
+│   │   │       ├── GetFlights/                        # Query + handler → PagedResult<FlightListItem>
+│   │   │       └── GetFlightByCode/                   # Query + handler → FlightDetail[]
+│   │   └── FlightDex.Flights.Infrastructure/          # Flights: persistence + adapters
+│   │       ├── DependencyInjection.cs                 # AddFlightsInfrastructure() (SQLite + MemoryCache)
+│   │       ├── Persistence/
+│   │       │   ├── FlightsDbContext.cs                # EF Core context: Flights, Locations
+│   │       │   ├── FlightsDbContextFactory.cs         # Design-time factory for migrations
+│   │       │   ├── FlightRepository.cs                # IFlightRepository (IMemoryCache → SQLite)
+│   │       │   ├── Configurations/                    # FlightConfiguration, LocationConfiguration
+│   │       │   ├── Migrations/                        # InitialCreate, AddLocations, RestructureLocations
+│   │       │   ├── Seeding/
+│   │       │   │   ├── FlightTimetableSeeder.cs       # Loads Departures_*/Arrivals_* CSVs at startup
+│   │       │   │   └── CsvLineParser.cs               # Positional CSV line parser
+│   │       │   └── SeedData/                          # 10 CSVs: {Departures,Arrivals}_{BLR,BOM,PNQ,LON,DBX}
+│   │       └── Caching/
+│   │           ├── AirportSuggestionCacheBuilder.cs   # Extracts Locations from the timetable (startup)
+│   │           └── SqliteAirportSuggestionCache.cs    # IAirportSuggestionCache over the Locations table
+│   │
+│   │       ── Booking module (parallels the Flights layout) ──
+│   │   ├── FlightDex.Booking.Domain/
+│   │   │   ├── User.cs                                # Account; PBKDF2 hash + salt
+│   │   │   └── Ticket.cs                              # Owned by User; snapshots airports + passenger
+│   │   ├── FlightDex.Booking.Application/
+│   │   │   ├── DependencyInjection.cs                 # AddBookingApplication()
+│   │   │   ├── BookingExceptions.cs                   # EmailAlreadyInUse / InvalidCredentials
+│   │   │   ├── Abstractions/                          # IUserRepository, ITicketRepository,
+│   │   │   │                                          #   IPasswordHasher, IJwtTokenService
+│   │   │   ├── Dtos/                                  # AuthResult, UserDto, TicketDto
+│   │   │   ├── Commands/                              # RegisterUser, Login, BookTicket, CancelTicket
+│   │   │   └── Queries/
+│   │   │       └── GetMyTickets/                      # Query + handler → TicketDto[]
+│   │   └── FlightDex.Booking.Infrastructure/
+│   │       ├── DependencyInjection.cs                 # AddBookingInfrastructure() (SQLite + JWT + hasher)
+│   │       ├── Persistence/
+│   │       │   ├── BookingDbContext.cs                # EF Core context: Users, Tickets
+│   │       │   ├── BookingDbContextFactory.cs         # Design-time factory
+│   │       │   ├── UserRepository.cs / TicketRepository.cs
+│   │       │   ├── Configurations/                    # UserConfiguration, TicketConfiguration
+│   │       │   └── Migrations/                        # InitialCreate
+│   │       └── Security/
+│   │           ├── JwtOptions.cs / JwtTokenService.cs # Issues + signs bearer tokens
+│   │           └── Pbkdf2PasswordHasher.cs            # IPasswordHasher (PBKDF2)
+│   │
+│   └── tests/
+│       ├── FlightDex.UnitTests/                       # Handlers, DTO mapping, hashing, JWT, paging
+│       │   ├── Flights/                               # GetFlights/GetFlightByCode handlers, mapping, ServedAirports
+│       │   ├── Booking/                               # Register/Login/Book/Cancel handlers, PBKDF2, JWT
+│       │   └── SharedKernel/                          # PagedResult
+│       └── FlightDex.IntegrationTests/                # WebApplicationFactory<Program> end-to-end
+│           ├── Infrastructure/                        # FlightDexApiFactory, test contracts
+│           ├── FlightApiTests.cs / FlightRepositoryTests.cs
+│           ├── AuthApiTests.cs / BookingJourneyE2ETests.cs
+│           └── PerfTests.cs                           # Query latency checks
+│
+└── Frontend/                                          # Angular standalone app (signals)
+    ├── package.json / angular.json / tsconfig*.json
+    ├── proxy.conf.json                                # ng serve → API (/flight,/airports,/auth,/ticket)
+    ├── nginx.conf / Dockerfile                         # Serves the build + reverse-proxies the API
+    ├── public/                                         # favicon, TitleBackground.jpg
+    └── src/
+        ├── main.ts / index.html
+        └── app/
+            ├── app.routes.ts                          # /timetable (public), /login, /book*, /mytickets* (*=guard)
+            ├── app.config.ts / app.ts / app.html
+            ├── flight.models.ts                       # Airport types, AIRPORT_INFO, SERVED_AIRPORT_OPTIONS, resolveAirport
+            ├── flight.service.ts                      # /flight + /airports calls
+            ├── timetable/                              # Departures/arrivals boards + detail modal
+            ├── book/                                   # book-tickets: search + staged booking flow
+            ├── tickets/                                # my-tickets (list/cancel) + ticket.service/models
+            ├── auth/                                   # login/register, auth.service, guard, interceptor, models
+            └── shared/                                 # autocomplete, show-picker directive, http-errors
 ```

@@ -67,6 +67,19 @@ export class Timetable {
   readonly arriveFrom = signal('');       // Arrivals box: "Arriving From:" display text
   readonly arriveFromTerm = signal('');   // …the search term sent to the API
 
+  // Per-box "Search by flight code" (a plain field, no suggestions).
+  readonly departByCode = signal('');
+  readonly arriveByCode = signal('');
+
+  // Which boxes are visible. Toggled by the Departures/Arrivals sliders and by running a
+  // search (which focuses the searched box). When only one is visible it is centred.
+  readonly showDep = signal(true);
+  readonly showArr = signal(true);
+  readonly onlyOneVisible = computed(() => this.showDep() !== this.showArr());
+
+  // Time display format: true = 12-hour AM/PM, false = 24-hour. Driven by the AM/PM slider.
+  readonly ampm = signal(true);
+
   // Per-box time filters.
   readonly deptAfter = signal('');
   readonly deptBefore = signal('');
@@ -128,12 +141,13 @@ export class Timetable {
     this.at.set(code);
     try { localStorage.setItem(AIRPORT_KEY, code); } catch { /* storage unavailable; selection just won't persist */ }
 
-    // New airport: clear any per-box searches and reload both boxes from the top.
-    this.departTo.set(''); this.departToTerm.set('');
-    this.arriveFrom.set(''); this.arriveFromTerm.set('');
+    // New airport: clear any per-box searches, show both boxes again, reload from the top.
+    this.departTo.set(''); this.departToTerm.set(''); this.departByCode.set('');
+    this.arriveFrom.set(''); this.arriveFromTerm.set(''); this.arriveByCode.set('');
     this.deptAfter.set(''); this.deptBefore.set('');
     this.arrAfter.set(''); this.arrBefore.set('');
     this.depSearchOpen.set(false); this.arrSearchOpen.set(false);
+    this.showDep.set(true); this.showArr.set(true);
     this.departures.update(b => ({ ...b, page: 1 }));
     this.arrivals.update(b => ({ ...b, page: 1 }));
     this.loadDepartures();
@@ -149,40 +163,42 @@ export class Timetable {
   onDepartToInput(text: string): void { this.departTo.set(text); this.departToTerm.set(text); }
   onArriveFromInput(text: string): void { this.arriveFrom.set(text); this.arriveFromTerm.set(text); }
 
-  /** Picked a destination suggestion: show its label, search by its code. */
+  /** Picked a destination suggestion: show its label, set the term. Search waits for the button. */
   onDepartToPicked(option: AutocompleteOption): void {
     this.departTo.set(option.label);
     this.departToTerm.set(option.value);
-    this.searchDepartures();
   }
 
-  /** Picked an origin suggestion: show its label, search by its code. */
+  /** Picked an origin suggestion: show its label, set the term. Search waits for the button. */
   onArriveFromPicked(option: AutocompleteOption): void {
     this.arriveFrom.set(option.label);
     this.arriveFromTerm.set(option.value);
-    this.searchArrivals();
   }
 
-  /** Search departures with the current filters (resets to the first page). */
+  /** Search departures (resets to the first page) and focus the departures box (centred). */
   searchDepartures(): void {
+    this.showDep.set(true); this.showArr.set(false);
     this.departures.update(b => ({ ...b, page: 1 }));
     this.loadDepartures();
   }
 
-  /** Search arrivals with the current filters (resets to the first page). */
+  /** Search arrivals (resets to the first page) and focus the arrivals box (centred). */
   searchArrivals(): void {
+    this.showArr.set(true); this.showDep.set(false);
     this.arrivals.update(b => ({ ...b, page: 1 }));
     this.loadArrivals();
   }
 
   clearDepSearch(): void {
     this.departTo.set(''); this.departToTerm.set('');
+    this.departByCode.set('');
     this.deptAfter.set(''); this.deptBefore.set('');
     this.searchDepartures();
   }
 
   clearArrSearch(): void {
     this.arriveFrom.set(''); this.arriveFromTerm.set('');
+    this.arriveByCode.set('');
     this.arrAfter.set(''); this.arrBefore.set('');
     this.searchArrivals();
   }
@@ -192,7 +208,7 @@ export class Timetable {
   private loadDepartures(): void {
     this.departures.update(b => ({ ...b, loading: true, error: null }));
     const range: TimeRange = { after: this.deptAfter().trim(), before: this.deptBefore().trim() };
-    this.flights.getDepartures(this.at(), this.departToTerm(), range, this.departures().page, PAGE_SIZE)
+    this.flights.getDepartures(this.at(), this.departToTerm(), this.departByCode(), range, this.departures().page, PAGE_SIZE)
       .subscribe({
         next: r => this.departures.update(b => ({ ...b, result: r, loading: false })),
         error: (err: HttpErrorResponse) => this.departures.update(b => ({
@@ -205,7 +221,7 @@ export class Timetable {
   private loadArrivals(): void {
     this.arrivals.update(b => ({ ...b, loading: true, error: null }));
     const range: TimeRange = { after: this.arrAfter().trim(), before: this.arrBefore().trim() };
-    this.flights.getArrivals(this.at(), this.arriveFromTerm(), range, this.arrivals().page, PAGE_SIZE)
+    this.flights.getArrivals(this.at(), this.arriveFromTerm(), this.arriveByCode(), range, this.arrivals().page, PAGE_SIZE)
       .subscribe({
         next: r => this.arrivals.update(b => ({ ...b, result: r, loading: false })),
         error: (err: HttpErrorResponse) => this.arrivals.update(b => ({
@@ -242,5 +258,20 @@ export class Timetable {
 
   closeDetail(): void {
     this.selected.set(null);
+  }
+
+  /** Time as shown, honouring the AM/PM slider: 12-hour with meridiem, or the raw 24-hour value. */
+  displayTime(time: string): string {
+    return this.ampm() ? this.formatTime(time) : time;
+  }
+
+  /** Formats a 24-hour "HH:mm" time as 12-hour with a meridiem, e.g. "14:30" -> "02:30 PM". */
+  formatTime(time: string): string {
+    const [h, m = '00'] = time.split(':');
+    const hour24 = Number(h);
+    if (Number.isNaN(hour24)) return time;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 % 12 || 12;
+    return `${String(hour12).padStart(2, '0')}:${m} ${period}`;
   }
 }

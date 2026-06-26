@@ -11,6 +11,7 @@ public sealed record FlightQuerySpec(
     FlightDirection Direction,
     string? Airport,
     string? CounterpartTerm,
+    string? FlightCode,
     TimeOnly? TimeAfter,
     TimeOnly? TimeBefore,
     int Page,

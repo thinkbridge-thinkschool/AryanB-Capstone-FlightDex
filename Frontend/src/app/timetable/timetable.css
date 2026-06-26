@@ -37,6 +37,55 @@
 }
 .change-airport-toggle:hover { background: #dbeafe; }
 
+/* Display toggles, pushed to the rightmost end of the bar. */
+.toggles { margin-left: auto; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.switch-text { font-size: 13px; font-weight: 600; color: #0f172a; white-space: nowrap; }
+/* Visually-hidden native checkbox; the .slider is the visible control. */
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.slider {
+  position: relative; flex: 0 0 auto;
+  width: 38px; height: 20px; border-radius: 999px;
+  background: #cbd5e1; transition: background 0.15s;
+}
+.slider::before {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  transition: transform 0.15s;
+}
+.switch input:checked + .slider { background: var(--accent); }
+.switch input:checked + .slider::before { transform: translateX(18px); }
+.switch input:focus-visible + .slider { outline: 2px solid #bfdbfe; outline-offset: 2px; }
+
+/* Segmented time-format toggle: a pill with two options and a white thumb that slides over
+   the selected one ("24 HRS" / "12 HRS"). */
+.segmented {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  background: #e2e8f0;
+  border-radius: 999px;
+  padding: 3px;
+}
+.seg-thumb {
+  position: absolute; top: 3px; bottom: 3px; left: 3px;
+  width: calc(50% - 3px);
+  background: #fff; border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform 0.18s ease;
+}
+.segmented.on .seg-thumb { transform: translateX(100%); }
+.seg-opt {
+  position: relative; z-index: 1;
+  border: none; background: none; cursor: pointer;
+  padding: 5px 14px;
+  font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.3px;
+  color: var(--muted); white-space: nowrap;
+  transition: color 0.18s;
+}
+.seg-opt.active { color: var(--accent); }
+
 .supported-note { margin: 0 2px 6px; font-size: 13px; color: var(--muted); }
 
 /* Change Airport pop-up. The supported-airports note sits above the input so it stays
@@ -147,13 +196,12 @@ main.container {
 table.flights { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .flights th, .flights td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); }
 
-/* Fixed column widths. Time / Flight / Airport Code / Details are sized to their content;
-   Airline and City (the unsized cols) share the remaining width. The Details column is just
-   wide enough for "Show details ›" plus a little space. */
-.flights col.c-time { width: 78px; }
+/* Fixed column widths. Time / Flight / Airport Code are sized to their content; Airline and
+   City (the unsized cols) share the remaining width. Time is wide enough for the 12-hour
+   "02:30 PM" form. */
+.flights col.c-time { width: 104px; }
 .flights col.c-flight { width: 104px; }
 .flights col.c-acode { width: 124px; }
-.flights col.c-details { width: 132px; }
 /* Keep cell contents on one line; overflow trims with an ellipsis rather than reflowing. */
 .flights td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -177,17 +225,6 @@ table.flights { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .flights tr.clickable:hover { background: var(--row-hover); }
 .flights .time { font-variant-numeric: tabular-nums; font-weight: 600; }
 .flights .code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
-
-/* Action column: a chevron is always shown; "Show details" fades in on row hover.
-   The text keeps its width even when hidden, so the row doesn't shift on hover. */
-.flights .details { text-align: right; white-space: nowrap; color: var(--muted); }
-.flights .details-text {
-  font-size: 13px; font-weight: 600; color: var(--accent);
-  opacity: 0; transition: opacity 0.15s;
-}
-.flights tr.clickable:hover .details-text { opacity: 1; }
-.flights .details .chev { font-size: 20px; line-height: 1; }
-.flights tr.clickable:hover .details .chev { color: var(--accent); }
 
 .box-foot {
   display: flex; align-items: center; justify-content: center; gap: 14px;

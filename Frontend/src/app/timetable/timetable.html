@@ -1,13 +1,37 @@
 <!-- "Timetable" bar -->
 <section class="at-bar">
   <div class="at-current">
-    <label>Departures and Arrivals at</label>
+    <label>You are at:</label>
     <span class="at-display-text">{{ airportDisplay() }}</span>
   </div>
 
   <button type="button" class="change-airport-toggle" (click)="toggleChangeAirport()">
     Change Airport
   </button>
+
+  <!-- Rightmost: display toggles. -->
+  <div class="toggles">
+    <label class="switch" title="Show or hide the Departures table">
+      <span class="switch-text">Departures</span>
+      <input type="checkbox" name="showDep" [ngModel]="showDep()" (ngModelChange)="showDep.set($event)" />
+      <span class="slider"></span>
+    </label>
+    <label class="switch" title="Show or hide the Arrivals table">
+      <span class="switch-text">Arrivals</span>
+      <input type="checkbox" name="showArr" [ngModel]="showArr()" (ngModelChange)="showArr.set($event)" />
+      <span class="slider"></span>
+    </label>
+
+    <!-- Rightmost corner: segmented time-format toggle; the thumb slides over the choice. -->
+    <div class="switch time-format" title="Switch between 24-hour and 12-hour time">
+      <span class="switch-text">Time Format:</span>
+      <div class="segmented" [class.on]="ampm()">
+        <span class="seg-thumb"></span>
+        <button type="button" class="seg-opt" [class.active]="!ampm()" (click)="ampm.set(false)">24 HRS</button>
+        <button type="button" class="seg-opt" [class.active]="ampm()" (click)="ampm.set(true)">12 HRS</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- Change Airport pop-up -->
@@ -29,8 +53,9 @@
 
 <main class="container">
   <section class="results">
-    <div class="boxes">
+    <div class="boxes" [class.single]="onlyOneVisible()">
       <!-- Departures box -->
+      @if (showDep()) {
       <div class="box">
         <div class="box-head dep">
           <h3>Departures</h3>
@@ -44,10 +69,15 @@
             <div class="field">
               <label for="departTo">Departing To:</label>
               <app-autocomplete class="field-input" inputId="departTo" placeholder="Enter City or Airport Code"
-                                [value]="departTo()" [options]="suggestions()"
+                                [value]="departTo()" [options]="suggestions()" [minChars]="1"
                                 (valueChange)="onDepartToInput($event)"
                                 (optionPicked)="onDepartToPicked($event)"
                                 (submit)="searchDepartures()" />
+            </div>
+            <div class="field">
+              <label for="departByCode">Search by flight code:</label>
+              <input id="departByCode" class="field-input" type="text" autocomplete="off" placeholder="e.g. AI501"
+                     [ngModel]="departByCode()" name="departByCode" (ngModelChange)="departByCode.set($event)" />
             </div>
             <div class="field">
               <label for="deptAfter">Departing After:</label>
@@ -78,7 +108,6 @@
                   <col class="c-flight" />
                   <col />
                   <col class="c-acode" />
-                  <col class="c-details" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -86,7 +115,6 @@
                     <th rowspan="2">Airline</th>
                     <th rowspan="2">Flight</th>
                     <th colspan="2" class="group">Destination</th>
-                    <th rowspan="2" class="details-col" aria-label="Details"></th>
                   </tr>
                   <tr>
                     <th class="sub-col">City</th>
@@ -96,12 +124,11 @@
                 <tbody>
                   @for (f of r.items; track f.flightCode + f.time) {
                     <tr class="clickable" (click)="openDetail(f.flightCode)">
-                      <td class="time">{{ f.time }}</td>
+                      <td class="time">{{ displayTime(f.time) }}</td>
                       <td>{{ f.airline }}</td>
                       <td class="code">{{ f.flightCode }}</td>
                       <td>{{ f.city }}</td>
                       <td class="code">{{ f.code }}</td>
-                      <td class="details"><span class="details-text">Show details</span> <span class="chev">&rsaquo;</span></td>
                     </tr>
                   }
                 </tbody>
@@ -117,8 +144,10 @@
           </div>
         }
       </div>
+      }
 
       <!-- Arrivals box -->
+      @if (showArr()) {
       <div class="box">
         <div class="box-head arr">
           <h3>Arrivals</h3>
@@ -132,10 +161,15 @@
             <div class="field">
               <label for="arriveFrom">Arriving From:</label>
               <app-autocomplete class="field-input" inputId="arriveFrom" placeholder="Enter City or Airport Code"
-                                [value]="arriveFrom()" [options]="suggestions()"
+                                [value]="arriveFrom()" [options]="suggestions()" [minChars]="1"
                                 (valueChange)="onArriveFromInput($event)"
                                 (optionPicked)="onArriveFromPicked($event)"
                                 (submit)="searchArrivals()" />
+            </div>
+            <div class="field">
+              <label for="arriveByCode">Search by flight code:</label>
+              <input id="arriveByCode" class="field-input" type="text" autocomplete="off" placeholder="e.g. AI501"
+                     [ngModel]="arriveByCode()" name="arriveByCode" (ngModelChange)="arriveByCode.set($event)" />
             </div>
             <div class="field">
               <label for="arrAfter">Arriving After:</label>
@@ -166,7 +200,6 @@
                   <col class="c-flight" />
                   <col />
                   <col class="c-acode" />
-                  <col class="c-details" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -174,7 +207,6 @@
                     <th rowspan="2">Airline</th>
                     <th rowspan="2">Flight</th>
                     <th colspan="2" class="group">Origin</th>
-                    <th rowspan="2" class="details-col" aria-label="Details"></th>
                   </tr>
                   <tr>
                     <th class="sub-col">City</th>
@@ -184,12 +216,11 @@
                 <tbody>
                   @for (f of r.items; track f.flightCode + f.time) {
                     <tr class="clickable" (click)="openDetail(f.flightCode)">
-                      <td class="time">{{ f.time }}</td>
+                      <td class="time">{{ displayTime(f.time) }}</td>
                       <td>{{ f.airline }}</td>
                       <td class="code">{{ f.flightCode }}</td>
                       <td>{{ f.city }}</td>
                       <td class="code">{{ f.code }}</td>
-                      <td class="details"><span class="details-text">Show details</span> <span class="chev">&rsaquo;</span></td>
                     </tr>
                   }
                 </tbody>
@@ -205,6 +236,7 @@
           </div>
         }
       </div>
+      }
     </div>
   </section>
 </main>
@@ -228,6 +260,12 @@
             <div class="sub"><span class="sub-label">Airlines:</span> <span class="sub-data">{{ d.airline }}</span></div>
             <div class="sub"><span class="sub-label">Flight Code:</span> <span class="sub-data">{{ d.flightCode }}</span></div>
             <div class="sub"><span class="sub-label">Airline Code:</span> <span class="sub-data">{{ d.airlineCode }}</span></div>
+          </section>
+
+          <!-- Entry 2: Time -->
+          <section class="entry">
+            <h4 class="entry-head">Time</h4>
+            <div class="sub"><span class="sub-data">{{ displayTime(d.time) }}</span></div>
           </section>
 
           <!-- Entry 2: the served (current) airport -->

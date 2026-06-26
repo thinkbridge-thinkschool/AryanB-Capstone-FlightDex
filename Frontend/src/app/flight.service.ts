@@ -15,26 +15,28 @@ export interface TimeRange {
 export class FlightService {
   private readonly http = inject(HttpClient);
 
-  /** Departures from an airport, optionally to a destination and within a time window. */
+  /** Departures from an airport, optionally to a destination, by flight code and within a time window. */
   getDepartures(
-    at: Airport, to: string, time: TimeRange, page: number, pageSize: number,
+    at: Airport, to: string, flightCode: string, time: TimeRange, page: number, pageSize: number,
   ): Observable<PagedResult<FlightListItem>> {
     let params = new HttpParams().set('at', at).set('page', page).set('pageSize', pageSize);
     // `to` (even empty) selects the departures view on the server. May be a code or city.
     params = params.set('to', to.trim());
+    if (flightCode.trim()) params = params.set('flightCode', flightCode.trim());
     if (time.after) params = params.set('deptTime_After', time.after);
     if (time.before) params = params.set('deptTime_Before', time.before);
 
     return this.http.get<PagedResult<FlightListItem>>('/flight', { params });
   }
 
-  /** Arrivals at an airport, optionally from an origin and within a time window. */
+  /** Arrivals at an airport, optionally from an origin, by flight code and within a time window. */
   getArrivals(
-    at: Airport, from: string, time: TimeRange, page: number, pageSize: number,
+    at: Airport, from: string, flightCode: string, time: TimeRange, page: number, pageSize: number,
   ): Observable<PagedResult<FlightListItem>> {
     let params = new HttpParams().set('at', at).set('page', page).set('pageSize', pageSize);
     // `from` (even empty) selects the arrivals view on the server. May be a code or city.
     params = params.set('from', from.trim());
+    if (flightCode.trim()) params = params.set('flightCode', flightCode.trim());
     if (time.after) params = params.set('arrTime_After', time.after);
     if (time.before) params = params.set('arrTime_Before', time.before);
 

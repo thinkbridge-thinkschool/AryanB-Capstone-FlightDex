@@ -15,11 +15,10 @@
       <!-- Left: ticket list -->
       <aside class="ticket-list">
         @for (t of items(); track t.ticketId) {
-          <button class="ticket-row" [class.active]="selected()?.ticketId === t.ticketId"
+          <button type="button" class="ticket-row" [class.active]="selected()?.ticketId === t.ticketId"
                   (click)="select(t)">
             <span class="route">{{ t.originCode }} → {{ t.destinationCode }}</span>
             <span class="when">{{ t.date }} · {{ t.time }}</span>
-            <span class="muted small">Ticket #{{ t.ticketId }}</span>
           </button>
         }
       </aside>
@@ -29,7 +28,6 @@
         @if (selected(); as t) {
           <div class="detail-head">
             <h2>{{ t.originCity }} → {{ t.destinationCity }}</h2>
-            <span class="ticket-id">Ticket #{{ t.ticketId }}</span>
           </div>
 
           <div class="route-block">
@@ -53,7 +51,7 @@
             <dt>Age</dt><dd>{{ t.age }}</dd>
           </dl>
 
-          <button class="btn danger" (click)="askCancel()">Cancel ticket</button>
+          <button type="button" class="btn danger" (click)="askCancel()">Cancel ticket</button>
         } @else {
           <p class="muted">Select a ticket to see its details.</p>
         }
@@ -73,11 +71,32 @@
       </p>
       <p class="muted">This cannot be undone.</p>
       <div class="confirm-actions">
-        <button class="btn danger" [disabled]="cancelling()" (click)="confirmCancel()">
-          {{ cancelling() ? 'Cancelling…' : 'Yes, cancel' }}
-        </button>
-        <button class="btn ghost" [disabled]="cancelling()" (click)="dismissCancel()">Keep ticket</button>
+        <button type="button" class="btn danger" (click)="confirmCancel()">Yes, cancel</button>
+        <button type="button" class="btn ghost" (click)="dismissCancel()">Keep ticket</button>
       </div>
+    </div>
+  </div>
+}
+
+<!-- Fake cancellation interface: cancelling → confirming → cancelled (always cancelled). -->
+@if (cancelStage() !== 'none') {
+  <div class="modal-backdrop">
+    <div class="gateway-box">
+      @if (cancelStage() === 'cancelling') {
+        <div class="spinner"></div>
+        <h3>Cancelling Ticket</h3>
+        <p class="muted">Please wait…</p>
+      } @else if (cancelStage() === 'confirming') {
+        <div class="spinner"></div>
+        <h3>Confirming with Airline</h3>
+        <p class="muted">Almost there…</p>
+      } @else {
+        <div class="cancel-check">✓</div>
+        <h3>Booking Cancelled</h3>
+        <div class="confirm-actions center">
+          <button type="button" class="btn" (click)="closeCancel()">Done</button>
+        </div>
+      }
     </div>
   </div>
 }

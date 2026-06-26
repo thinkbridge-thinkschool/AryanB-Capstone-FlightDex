@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FlightService } from '../flight.service';
 import {
-  AIRPORT_INFO, SERVED_AIRPORT_OPTIONS, Airport, FlightListItem,
+  AIRPORT_INFO, SERVED_AIRPORT_OPTIONS, Airport, FlightDetail, FlightListItem,
   airportCity, airportFullName, airportLabel, airportOptionLabel, resolveAirport,
 } from '../flight.models';
 import { AuthService } from '../auth/auth.service';
@@ -85,18 +85,16 @@ export class BookTickets {
     return o ? airportLabel(o) : '';
   });
 
-  // Buy → fetch fare → fake payment gateway → book.
-  readonly selectedFlight = signal<FlightListItem | null>(null);
-  readonly priceReady = signal(false);   // fare "loaded" (placeholder, no real amount)
-  readonly priceLoading = signal(false);
-  readonly booking = signal(false);
-  readonly bookError = signal<string | null>(null);
-  readonly booked = signal<Ticket | null>(null);
-  /** Fake payment-gateway state. */
-  readonly paymentStage = signal<'none' | 'processing' | 'completed'>('none');
+  // Flight detail pop-up — same data as the Timetable "details" view.
+  readonly detail = signal<FlightDetail | null>(null);
+  readonly detailLoading = signal(false);
 
-  /** Placeholder fare — shown verbatim, no amount is computed. */
-  readonly priceLabel = 'INR XX,XXX';
+  // Booking — a fake staged interface that still creates the real ticket behind the scenes.
+  readonly selectedFlight = signal<FlightListItem | null>(null);
+  readonly booking = signal(false);
+  readonly booked = signal<Ticket | null>(null);
+  /** Stages of the booking flow: confirm details → fake redirect → confirming → confirmed. */
+  readonly bookStage = signal<'none' | 'confirm' | 'redirect' | 'confirming' | 'confirmed'>('none');
 
   readonly passengerName = computed(() => {
     const u = this.auth.user();
@@ -104,11 +102,10 @@ export class BookTickets {
   });
 
   search(): void {
-    this.bookError.set(null);
     this.booked.set(null);
     this.selectedFlight.set(null);
-    this.priceReady.set(false);
-    this.paymentStage.set('none');
+    this.detail.set(null);
+    this.bookStage.set('none');
 
     const origin = resolveAirport(this.fromTerm());
     if (!origin) {
@@ -126,7 +123,7 @@ export class BookTickets {
     this.results.set(null);
 
     const range = { after: this.after().trim(), before: this.before().trim() };
-    this.flights.getDepartures(origin, this.toTerm().trim(), range, 1, 100).subscribe({
+    this.flights.getDepartures(origin, this.toTerm().trim(), '', range, 1, 100).subscribe({
       next: page => {
         this.searchedOrigin.set(origin);
         this.results.set(page.items);
@@ -139,48 +136,64 @@ export class BookTickets {
     });
   }
 
-  /** Buy a flight: open the confirmation box and fetch its fare. */
-  buyFlight(flight: FlightListItem): void {
-    this.bookError.set(null);
+  // ---- Flight details pop-up -------------------------------------------
+
+  /** Open the details pop-up for a flight (same data/shape as the Timetable view). */
+  openDetail(flightCode: string): void {
+    this.detailLoading.set(true);
+    this.detail.set(null);
+    this.flights.getDetail(flightCode).subscribe({
+      next: d => { this.detail.set(d); this.detailLoading.set(false); },
+      error: () => { this.detailLoading.set(false); },
+    });
+  }
+
+  closeDetail(): void {
+    this.detail.set(null);
+    this.detailLoading.set(false);
+  }
+
+  /** Time as 12-hour with a meridiem, e.g. "14:30" -> "02:30 PM". */
+  formatTime(time: string): string {
+    const [h, m = '00'] = time.split(':');
+    const hour24 = Number(h);
+    if (Number.isNaN(hour24)) return time;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 % 12 || 12;
+    return `${String(hour12).padStart(2, '0')}:${m} ${period}`;
+  }
+
+  // ---- Booking — fake staged interface ---------------------------------
+
+  /** Book a flight: first show the details-confirmation box. */
+  bookFlight(flight: FlightListItem): void {
+    this.booked.set(null);
     this.selectedFlight.set(flight);
-    this.fetchPrice();
+    this.bookStage.set('confirm');
   }
 
-  /** Simulated fare lookup — short "network" delay, then the placeholder fare shows. */
-  private fetchPrice(): void {
-    this.priceReady.set(false);
-    this.priceLoading.set(true);
-    setTimeout(() => {
-      this.priceReady.set(true);
-      this.priceLoading.set(false);
-    }, 600);
-  }
-
-  dismissConfirm(): void {
-    if (this.booking() || this.paymentStage() !== 'none') return;
-    this.selectedFlight.set(null);
-    this.priceReady.set(false);
-  }
-
-  /** Confirm the fare → fake payment gateway (always "completed") → book the ticket. */
-  proceedToPayment(): void {
-    if (!this.priceReady()) return;
-    this.bookError.set(null);
-    this.paymentStage.set('processing');
-    setTimeout(() => {
-      this.paymentStage.set('completed');     // gateway always succeeds
-      setTimeout(() => this.confirmBooking(), 900);
-    }, 1500);
-  }
-
-  private confirmBooking(): void {
+  /** Confirmed the details: run the fake "redirect → confirming → confirmed" interface. */
+  proceedBooking(): void {
     const flight = this.selectedFlight();
-    const origin = this.searchedOrigin();
-    const originInfo = AIRPORT_INFO.find(a => a.code === origin);
+    if (!flight) return;
+    this.bookStage.set('redirect');
+    setTimeout(() => {
+      this.bookStage.set('confirming');
+      this.createTicket(flight);
+    }, 1400);
+  }
 
-    if (!flight || !originInfo || !this.date()) {
-      this.paymentStage.set('none');
-      this.bookError.set('Something is missing — please search and pick a flight again.');
+  /** Dismiss the confirmation box without booking (keeps the results list). */
+  cancelBook(): void {
+    this.bookStage.set('none');
+    this.selectedFlight.set(null);
+  }
+
+  /** Creates the real ticket in the background; the interface always ends in "Confirmed". */
+  private createTicket(flight: FlightListItem): void {
+    const originInfo = AIRPORT_INFO.find(a => a.code === this.searchedOrigin());
+    if (!originInfo || !this.date()) {
+      setTimeout(() => this.bookStage.set('confirmed'), 900);
       return;
     }
 
@@ -193,17 +206,20 @@ export class BookTickets {
     }).subscribe({
       next: ticket => {
         this.booking.set(false);
-        this.paymentStage.set('none');
-        this.selectedFlight.set(null);
-        this.priceReady.set(false);
         this.booked.set(ticket);
-        this.results.set(null);
+        setTimeout(() => this.bookStage.set('confirmed'), 900);
       },
-      error: (err: HttpErrorResponse) => {
+      // The fake interface always reaches "Booking Confirmed", even if the API call fails.
+      error: () => {
         this.booking.set(false);
-        this.paymentStage.set('none');
-        this.bookError.set(httpErrorMessage(err, 'Could not book the ticket. Please try again.'));
+        setTimeout(() => this.bookStage.set('confirmed'), 900);
       },
     });
+  }
+
+  closeBook(): void {
+    this.bookStage.set('none');
+    this.selectedFlight.set(null);
+    this.results.set(null);
   }
 }

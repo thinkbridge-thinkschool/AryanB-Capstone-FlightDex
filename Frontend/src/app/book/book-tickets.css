@@ -63,36 +63,30 @@
   padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
-/* Buy column: give the button room so it's never clipped at the table edge. */
-.route-table .buy-col, .route-table td:last-child { width: 1%; padding-right: 16px; text-align: center; }
+/* Action columns: keep the Details/Book buttons tight and centred at the table edge. */
+.route-table .act-col, .route-table td:nth-last-child(-n+2) { width: 1%; text-align: center; padding-left: 8px; padding-right: 8px; }
+.route-table td:last-child { padding-right: 16px; }
 .route-table thead th {
   background: #f1f5f9; font-size: 12px; text-transform: uppercase;
   letter-spacing: 0.4px; color: var(--muted); font-weight: 700;
 }
-/* Grouped "From"/"To" header spanning their three sub-columns. */
-.route-table thead th.group { text-align: center; border-left: 1px solid var(--line); }
-.route-table thead tr:last-child th { border-bottom: 2px solid var(--line); }
 .route-table tbody tr:last-child td { border-bottom: none; }
 .route-table tbody tr:hover { background: var(--row-hover); }
 .route-table .time { font-variant-numeric: tabular-nums; font-weight: 600; }
-.route-table .airport { white-space: normal; color: var(--muted); min-width: 160px; }
 .route-table .code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
 
-/* Yellow Buy button */
-.buy-btn {
+/* Row action buttons: blue "Details", yellow "Book". */
+.details-btn, .book-row-btn {
   border: none; cursor: pointer;
-  background: #facc15; color: #1f2937;
   font-weight: 700; font-size: 14px;
   padding: 6px 18px; border-radius: 8px;
-  transition: background 0.12s;
+  transition: filter 0.12s;
 }
-.buy-btn:hover { background: #eab308; }
-.buy-btn:active { background: #ca8a04; }
+.details-btn { background: var(--accent); color: #fff; }   /* blue */
+.book-row-btn { background: #facc15; color: #1f2937; }      /* yellow */
+.details-btn:hover, .book-row-btn:hover { filter: brightness(1.08); }
 
-/* Fare line in the confirm box */
-.fare { color: var(--accent); }
-
-/* Fake payment gateway */
+/* Fake booking gateway */
 .gateway-box {
   background: #fff; border-radius: 16px; padding: 32px;
   width: 100%; max-width: 380px; text-align: center;
@@ -112,33 +106,35 @@
   font-size: 30px; line-height: 52px;
 }
 
-/* Success */
-.confirm { margin-top: 22px; padding: 20px 22px; border-radius: 14px; }
-.confirm h2 { margin: 0 0 8px; font-size: 20px; }
-.confirm p { margin: 4px 0; }
-.confirm .btn { margin-top: 14px; display: inline-block; text-decoration: none; }
+/* Confirmed-stage action buttons, centred. (modal-backdrop / confirm-actions live in styles.css) */
+.confirm-actions.center { justify-content: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+.gateway-box .btn { text-decoration: none; }
 
-/* Confirmation box — modal-backdrop, .endpoint and .confirm-actions are in styles.css. */
+/* Booking confirmation box. */
 .confirm-box {
   background: #fff; border-radius: 16px; padding: 24px 26px;
   width: 100%; max-width: 460px;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
 }
 .confirm-box h3 { margin: 0 0 16px; font-size: 21px; }
-
-.route-block {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 16px;
-  background: #f8fafc;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 18px;
-}
-.ep-code { font-size: 24px; font-weight: 800; letter-spacing: 1px; }
-.arrow { font-size: 22px; color: var(--accent); }
-
-dl.facts { display: grid; grid-template-columns: 110px 1fr; gap: 9px 14px; margin: 0 0 20px; }
+dl.facts { display: grid; grid-template-columns: 110px 1fr; gap: 9px 14px; margin: 0 0 4px; }
 dl.facts dt { color: var(--muted); font-size: 14px; }
 dl.facts dd { margin: 0; font-weight: 600; }
+
+/* Flight detail pop-up — same look as the Timetable details modal. */
+.modal {
+  background: #fff; border-radius: 14px; padding: 22px 24px;
+  width: 100%; max-width: 440px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+}
+.close { background: none; border: none; font-size: 26px; line-height: 1; cursor: pointer; color: var(--muted); }
+.detail-modal { position: relative; max-width: 620px; padding: 36px 40px; max-height: 90vh; overflow-y: auto; }
+.detail-close { position: absolute; top: 12px; right: 16px; font-size: 36px; }
+
+.detail-title { margin: 0 0 20px; font-size: 24px; font-weight: 700; text-align: left; color: #0f172a; }
+
+.entries { display: flex; flex-direction: column; gap: 18px; }
+.entry-head { margin: 0 0 6px; font-size: 20px; font-weight: 700; color: #0f172a; }
+.sub { margin-left: 24px; font-size: 16px; line-height: 1.6; }
+.sub-label { color: var(--muted); margin-right: 0.4em; }
+.sub-data { color: #0f172a; }

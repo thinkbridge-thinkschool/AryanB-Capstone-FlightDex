@@ -61,6 +61,8 @@ export class Autocomplete {
   readonly options = input<readonly AutocompleteOption[]>([]);
   readonly inputId = input<string>('');
   readonly limit = input<number>(10);
+  /** Minimum characters typed before suggestions appear. 0 shows all options on focus. */
+  readonly minChars = input<number>(0);
 
   /** Raw input text on every keystroke. */
   readonly valueChange = output<string>();
@@ -74,6 +76,8 @@ export class Autocomplete {
 
   readonly filtered = computed(() => {
     const q = this.value().trim().toLowerCase();
+    // Below the minimum length, show nothing (e.g. wait for the first typed letter).
+    if (q.length < this.minChars()) return [];
     const all = this.options();
     const matches = q ? all.filter(o => o.label.toLowerCase().includes(q)) : all.slice();
     return matches.slice(0, this.limit());

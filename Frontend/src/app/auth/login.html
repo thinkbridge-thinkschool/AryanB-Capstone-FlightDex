@@ -2,7 +2,9 @@
   <div class="auth-card">
     <h1 class="auth-title">{{ mode() === 'login' ? 'Sign in' : 'Create your account' }}</h1>
 
-    <p class="note">Note: Login to Book Tickets!</p>
+    @if (mode() === 'login') {
+      <p class="note">Login to book tickets!</p>
+    }
 
     @if (error()) {
       <p class="error">{{ error() }}</p>
@@ -97,7 +99,7 @@
         <div class="form-group">
           <label class="field-label" for="regPassword">Password</label>
           <input id="regPassword" class="input" type="password" name="regPassword" autocomplete="new-password"
-                 placeholder="At least 6 characters"
+                 placeholder="Min 8 chars, with a-z, A-Z and 0-9"
                  [ngModel]="regPassword()" (ngModelChange)="regPassword.set($event)" />
         </div>
 
