@@ -11,13 +11,15 @@ The frontend is built with Angular 22. It is a modern UI built with standalone c
 The deployment is done with Azure Container Apps, Azure Static Web Apps, Key Vault, EntraID, Azure SQL and Azure Deployment Stacks. Deployment is done using Biceps IaC with entire fullstack provisioned in 'azd up'. 
 
 # Demo - [Documentation/Demo.md](Documentation/Demo.md)
-# Demo VIdeo - https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/blob/main/Documentation/Demo-Video.mp4
+# Demo VIdeo - https://drive.google.com/drive/folders/1K2yO6RojVGDnnszDrxhhJw4jI5I4jPzB?usp=drive_link
+> Kindly ignore the old demo video without voice and refer the Google Drive Link above.  
 
 # Detailed Documentation:
 - Design - [Documentation/Design.md](Documentation/Design.md)
 - Strucucture - [Documentation/Structure.md](Documentation/Structure.md)
 - Features - [Documentation/Features.md](Documentation/Features.md)
 - Flow - [Documentation/Flow.md](Documentation/Flow.md) 
+- Postmortem - [Documentation/Solutions/D32P1_Solution.md](Documentation/Solutions/D32P1_Solution.md)
 
 # Piece Solutions:
 - Solutions upto Day 29 in their respective brances:
@@ -33,3 +35,4 @@ The deployment is done with Azure Container Apps, Azure Static Web Apps, Key Vau
     - Day 30 Piece 1 - [Documentation/Solutions/D30P1_Solution.md](Documentation/Solutions/D30P1_Solution.md)
     - Day 31 Piece 1 - [Documentation/Solutions/D31P1_Solution.md](Documentation/Solutions/D31P1_Solution.md)
         - [![Integration, Perf and Security](https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/actions/workflows/ci.yml/badge.svg)](https://github.com/thinkbridge-thinkschool/AryanB-Capstone-FlightDex/actions/workflows/ci.yml)
+    - Day 32 Piece 1 - [Documentation/Solutions/D32P1_Solution.md](Documentation/Solutions/D32P1_Solution.md)
